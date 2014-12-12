@@ -1,6 +1,11 @@
 var SpriteHelper = {
 	canvasWidth: 960, canvasHeight: 720,
-  imageSource: 'sprites.png'
+  imageSource: '../sprites.png'
+};
+
+SpriteHelper.zoom = function() {
+	var global = SpriteHelper;
+  global.drawImage(global.image, 0, 0);
 };
 
 SpriteHelper.load = function () {
@@ -15,6 +20,10 @@ SpriteHelper.load = function () {
 	canvasContainer.style.height = global.canvasHeight + 'px';
 	var context = canvas.context = canvas.getContext('2d');
 
+  global.image = new Image();
+  global.image.src = global.imageSource;
+  global.zoomLevel = 1;
+  global.zoom();
 };
 
 window.onload = SpriteHelper.load;
