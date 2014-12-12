@@ -1,13 +1,16 @@
+html, body, div, p {
+  margin: 0;
+  padding: 0;
+}
+
 body {
+  overflow: hidden;
 }
 
 #wrapper {
 }
 
-#mainCanvasContainer {
-	border: 2px solid #ccc;
-  position: absolute;
-  top: 10px;
-  left: 60px;
+#mainCanvas {
+  background: url(../i/blank.1.png);
 }
 
