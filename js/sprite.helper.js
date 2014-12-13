@@ -1,28 +1,63 @@
 var SpriteHelper = {
-  imageSource: 'sprites.png'
+  imageSource: 'sprites.png',
+  clickMode: { pan: true }
 };
 
 SpriteHelper.reset = function() {
+	var global = SpriteHelper;
+  global.view = {};
+  global.target = {};
+  global.zoom = 1;
+  global.update();
+};
+ 
+SpriteHelper.update = function() {
 	var global = SpriteHelper,
       canvas = global.canvas,
       context = canvas.context,
-      image = global.image;
+      image = global.image,
+      view = global.view,
+      target = global.target,
+      zoom = global.zoom,
+      virtual = { width: zoom * image.width, height: zoom * image.height };
   // Width
-  var viewWidth = Math.min(canvas.width, image.width),
-      targetWidth = Math.min(viewWidth, canvas.width),
-      viewX = (image.width - viewWidth) / 2,
-      targetX = Math.max(0, (canvas.width - viewWidth) / 2);
+  view.width = Math.min(virtual.width, canvas.width);
+  view.x = (virtual.width - view.width) / 2;
+  target.x = Math.max(0, (canvas.width - view.width) / 2);
   // Height
-  var viewHeight = Math.min(canvas.height, image.height),
-      targetHeight = Math.min(viewHeight, canvas.height),
-      viewY = (image.height - viewHeight) / 2,
-      targetY = Math.max(0, (canvas.height - viewHeight) / 2);
-  // Background
-  context.fillStyle = '#888';
-  context.fillRect(targetX, targetY, targetWidth, targetHeight);
+  view.height = Math.min(virtual.height, canvas.height);
+  view.y = (virtual.height - view.height) / 2;
+  target.y = Math.max(0, (canvas.height - view.height) / 2);
+  // Paint background
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.fillStyle = '#bbb';
+  context.fillRect(target.x, target.y, view.width, view.height);
+  canvas.context.mozImageSmoothingEnabled = false;
+  canvas.context.webkitImageSmoothingEnabled = false;
+  canvas.context.msImageSmoothingEnabled = false;
+  canvas.context.imageSmoothingEnabled = false;
   context.drawImage(global.image,
-      viewX, viewY, viewWidth, viewHeight,
-      targetX, targetY, targetWidth, targetHeight);
+      view.x/zoom, view.y/zoom, view.width/zoom, view.height/zoom,
+      target.x, target.y, view.width, view.height);
+};
+
+SpriteHelper.zoomIn = function () {
+	var global = SpriteHelper;
+  if (global.zoom >= 1) {
+    global.zoom += 1;
+  } else {
+    global.zoom = 1/(Math.round(1/global.zoom) - 1);
+  }
+  global.update();
+};
+SpriteHelper.zoomOut = function () {
+	var global = SpriteHelper;
+  if (global.zoom > 1) {
+    global.zoom -= 1;
+  } else {
+    global.zoom = 1/(Math.round(1/global.zoom) + 1);
+  }
+  global.update();
 };
 
 SpriteHelper.load = function () {
@@ -40,9 +75,22 @@ SpriteHelper.load = function () {
     $(window).on('resize', function () {
       canvas.width = $(window).width();
       canvas.height = $(window).height();
-      global.reset();
+      global.update();
     });
   };
+
+  $(window).keydown(function (event) {
+    var keyDownHandlers = {
+      68: global.zoomOut,
+      70: global.zoomIn
+    };
+    var handler = keyDownHandlers[event.which];
+    if (handler === undefined) {
+      console.log('key down: '+event.which);
+    } else {
+      handler();
+    }
+  });
 };
 
-window.onload = SpriteHelper.load;
+$(document).ready(SpriteHelper.load);

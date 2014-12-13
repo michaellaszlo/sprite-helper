@@ -1,0 +1,16 @@
+
+Louis Acresti: Disable interpolation when scaling a canvas
+http://stackoverflow.com/questions/7615009/disable-interpolation-when-scaling-a-canvas
+
+Dominic Szablewski: Drawing pixels is hard
+http://phoboslab.org/log/2012/09/drawing-pixels-is-hard
+
+  fast code
+  http://phoboslab.org/log/2012/09/drawing-pixels-is-hard#comment16
+
+Vaughn Royko: State of Nearest-neighbor Interpolation in Canvas
+http://vaughnroyko.com/state-of-nearest-neighbor-interpolation-in-canvas/
+
+MDN: the imageSmoothingEnabled property of the Canvas 2D API
+https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D.imageSmoothingEnabled
+
