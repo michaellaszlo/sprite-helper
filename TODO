@@ -1,0 +1,41 @@
++ zoom to center
++ resize canvas to fit window
+
++ bound panning: don't go beyond image
+- free panning: go as long as one pixel is visible
+- pan with momentum (fling)
+
+- control panel
+- location: top, bottom, left, right
+- panning limit: bound or free
+- panning movement: steady or fling
+
+- display zoom level
+- instant zoom: 1x
+- instant zoom: best fit
+
+- zoom toward mouse
+- zooming choice: toward mouse or toward center
+
+- cross-platform scaling?
+
+- draw frame
+- auto-frame
+- undo?
+- lock frame?
+
+- background colors
+- frame colors
+
+- manually draw polygon
+  - add point
+  - move point
+  - delete point
+- automatically compute polygon
+  - choose pixel threshold
+- undo?
+- lock polygon?
+
+- generate code
+- code options
+
