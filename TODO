@@ -1,18 +1,21 @@
 + zoom to center
 + resize canvas to fit window
 
-+ bound panning: don't go beyond image
-- free panning: go as long as one pixel is visible
++ bound panning: not allowed to go beyond the image
++ free panning: allowed to go as long as a minimal border is visible
++ scaled and unscaled panning
 - pan with momentum (fling)
 
-- control panel
-- location: top, bottom, left, right
-- panning limit: bound or free
-- panning movement: steady or fling
-
+- make control panel
 - display zoom level
-- instant zoom: 1x
-- instant zoom: best fit
+  - instant zoom: 1x
+  - instant zoom: best fit
+- show map of view relative to scaled image
+- add widgets
+  - panel location: top, bottom, left, right
+  - panning limit: bound or free
+  - panning speed: unscaled, scaled, double-scaled
+  - panning movement: steady or fling
 
 - zoom toward mouse
 - zooming choice: toward mouse or toward center

@@ -1,15 +1,30 @@
 var SpriteHelper = {
   imageSource: 'sprites.png',
-  clickMode: { pan: true }
+  option: {
+    pan: { free: true, minimumBorderPixels: 5, scaled: true }
+  },
+  mode: {
+    click: { pan: true }
+  }
 };
 
-SpriteHelper.reset = function() {
+SpriteHelper.reset = function () {
 	var g = SpriteHelper,
       image = g.image;
   g.zoom = 1;
   g.scaled = { width: image.width, height: image.height };
   g.focus = { x: image.width / 2, y: image.height / 2 };
   g.paint();
+};
+
+SpriteHelper.between = function (low, x, high) {
+  if (x < low) {
+    return low;
+  } else if (x > high) {
+    return high;
+  } else {
+    return x;
+  }
 };
  
 SpriteHelper.paint = function() {
@@ -20,43 +35,46 @@ SpriteHelper.paint = function() {
       zoom = g.zoom,
       scaled = g.scaled,
       focus = g.focus,
-      view = {},
+      crop = {},
       target = {};
 
-  // Compute the view dimensions within the scaled image, adjust the focus
-  //  if necessary to keep the view rectangle within the image, and
-  //  calculate the target rectangle on the canvas.
-  if (canvas.width >= scaled.width) {
-    view.width = scaled.width;
-    view.x = 0;
-    target.x = (canvas.width - view.width) / 2;
-    target.width = view.width;
+  // Compute the crop dimensions within the scaled image and calculate
+  //  the target rectangle on the canvas. The focus is the center of the
+  //  view of the scaled image. The span is the distance from the focus
+  //  to the edge of the view.
+  var border = g.zoom * g.option.pan.minimumBorderPixels,
+    span = { x: canvas.width / g.zoom / 2,
+             y: canvas.height / g.zoom / 2 };
+  if (g.option.pan.free) {
+    focus.x = g.between(border - span.x, focus.x,
+                        scaled.width + span.x - border);
   } else {
-    view.width = canvas.width;
-    focus.x = Math.max(view.width/2, focus.x);
-    focus.x = Math.min(focus.x, scaled.width - view.width/2);
-    view.x = focus.x - view.width/2;
-    target.x = 0;
-    target.width = canvas.width;
+    focus.x = g.between(Math.min(span.x, scaled.width/2), focus.x,
+                        Math.max(scaled.width - span.x, scaled.width/2));
   }
-  if (canvas.height >= scaled.height) {
-    view.height = scaled.height;
-    view.y = 0;
-    target.y = (canvas.height - view.height) / 2;
-    target.height = view.height;
+  crop.x = g.between(0, focus.x - span.x, scaled.width);
+  crop.width = g.between(0, focus.x + span.x, scaled.width) - crop.x;
+  target.x = (crop.x - focus.x + span.x) * g.zoom;
+  target.width = crop.width * g.zoom;
+  if (g.option.pan.free) {
+    focus.y = g.between(border - span.y, focus.y,
+                        scaled.height + span.y - border);
   } else {
-    view.height = canvas.height;
-    focus.y = Math.max(view.height/2, focus.y);
-    focus.y = Math.min(focus.y, scaled.height - view.height/2);
-    view.y = focus.y - view.height/2;
-    target.y = 0;
-    target.height = canvas.height;
+    focus.y = g.between(Math.min(span.y, scaled.height/2), focus.y,
+                        Math.max(scaled.height - span.y, scaled.height/2));
   }
+  crop.y = g.between(0, focus.y - span.y, scaled.height);
+  crop.height = g.between(0, focus.y + span.y, scaled.height) - crop.y;
+  target.y = (crop.y - focus.y + span.y) * g.zoom;
+  target.height = crop.height * g.zoom;
+  //console.log('focus: '+JSON.stringify(focus));
+  //console.log('crop: '+JSON.stringify(crop));
+  //console.log('target: '+JSON.stringify(target));
 
   // Wipe the slate clean.
   context.clearRect(0, 0, canvas.width, canvas.height);
   context.fillStyle = '#fff';
-  context.fillRect(target.x, target.y, view.width, view.height);
+  context.fillRect(target.x, target.y, target.width, target.height);
 
   // Disable fuzzy interpolation.
   canvas.context.mozImageSmoothingEnabled = false;
@@ -64,10 +82,10 @@ SpriteHelper.paint = function() {
   canvas.context.msImageSmoothingEnabled = false;
   canvas.context.imageSmoothingEnabled = false;
 
-  // Scale the view rectangle back to the native image and copy it to
+  // Scale the crop rectangle back to the native image and copy it to
   //   the target rectangle on the canvas.
   context.drawImage(g.image,
-      view.x/g.zoom, view.y/g.zoom, view.width/g.zoom, view.height/g.zoom,
+      crop.x/g.zoom, crop.y/g.zoom, crop.width/g.zoom, crop.height/g.zoom,
       target.x, target.y, target.width, target.height);
 };
 
@@ -97,19 +115,23 @@ SpriteHelper.zoomOut = function () {
   SpriteHelper.zoomBy(-1);
 };
 
+// Click and drag to pan the canvas.
 SpriteHelper.mouseDownCanvas = function (event) {
 	var g = SpriteHelper,
       canvas = g.canvas,
       focus = g.focus,
       focusStart = { x: focus.x, y: focus.y },
       mouseStart = { x: event.pageX, y: event.pageY };
-  //console.log('mouse down: '+event.pageX+', '+event.pageY);
-  //
   var mouseMove = function (event) {
     //console.log('mouse move: '+event.pageX+', '+event.pageY);
-    var x = event.pageX, y = event.pageY;
-    focus.x = focusStart.x + mouseStart.x - x;
-    focus.y = focusStart.y + mouseStart.y - y;
+    var dx = (mouseStart.x - event.pageX),
+        dy = (mouseStart.y - event.pageY);
+    if (!g.option.pan.scaled) {
+      dx /= g.zoom;
+      dy /= g.zoom;
+    }
+    focus.x = focusStart.x + dx;
+    focus.y = focusStart.y + dy;
     g.paint();
   };
   var mouseUp = function (event) {
