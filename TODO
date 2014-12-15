@@ -1,9 +1,13 @@
 + zoom to center
 + resize canvas to fit window
 
-+ bound panning: not allowed to go beyond the image
-+ free panning: allowed to go as long as a minimal border is visible
++ bounded panning: not allowed to go beyond the image
++ free panning: allowed to go as long as the border is visible
 + scaled and unscaled panning
+
+- replace minimumBorderPixels with a border outside the image 
+- adjust the focus to prevent zoom jitter
+
 - pan with momentum (fling)
 
 - make control panel
@@ -14,8 +18,8 @@
 - add widgets
   - panel location: top, bottom, left, right
   - panning limit: bound or free
-  - panning speed: unscaled, scaled, double-scaled
-  - panning movement: steady or fling
+  - panning speed: unscaled or scaled
+  - panning release: abrupt or fling
 
 - zoom toward mouse
 - zooming choice: toward mouse or toward center
@@ -27,8 +31,10 @@
 - undo?
 - lock frame?
 
-- background colors
-- frame colors
+- color pickers
+  - background
+  - bounding box
+  - bounding border
 
 - manually draw polygon
   - add point
