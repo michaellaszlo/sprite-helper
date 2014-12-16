@@ -5,8 +5,11 @@
 + free panning: allowed to go as long as the border is visible
 + scaled and unscaled panning
 
-- replace minimumBorderPixels with a border outside the image 
-- adjust the focus to prevent zoom jitter
++ replace minimumBorderPixels with a border outside the image 
+
++ correct the problem of ghost panning
+  test: click beyond image, drag toward image and off screen, then drag back
+  solution: pan the image as soon as the cursor starts dragging back
 
 - pan with momentum (fling)
 
@@ -18,11 +21,15 @@
 - add widgets
   - panel location: top, bottom, left, right
   - panning limit: bound or free
-  - panning speed: unscaled or scaled
+  - panning speed: unscaled, semi-scaled, scaled
   - panning release: abrupt or fling
+  - zoom scale: constant, fibonacci, exponential, what else?
+
+- impose shrink limit
 
 - zoom toward mouse
-- zooming choice: toward mouse or toward center
+- zooming mode: toward mouse or toward center
+- option: animate bounding box upon zooming
 
 - cross-platform scaling?
 

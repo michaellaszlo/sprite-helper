@@ -1,7 +1,8 @@
 var SpriteHelper = {
   imageSource: 'sprites.png',
+  border: 4,
   option: {
-    pan: { free: true, minimumBorderPixels: 5, scaled: true }
+    pan: { free: true, scaled: false, reposition: true }
   },
   mode: {
     click: { pan: true }
@@ -34,45 +35,49 @@ SpriteHelper.paint = function() {
       zoom = g.zoom,
       focus = g.focus,
       crop = {},
-      target = {};
+      target = g.target = {};
 
   // Compute the crop dimensions within the scaled image and calculate
   //  the target rectangle on the canvas. The focus is the center of the
   //  view of the scaled image. The span is the distance from the focus
   //  to the edge of the view.
-  var border = g.option.pan.minimumBorderPixels,
-    span = { x: canvas.width / g.zoom / 2,
+  var span = { x: canvas.width / g.zoom / 2,
              y: canvas.height / g.zoom / 2 };
   if (g.option.pan.free) {
-    focus.x = g.between(border - span.x, focus.x,
-                        image.width + span.x - border);
+    focus.x = g.between(-span.x, focus.x,
+                        image.width + span.x);
   } else {
     focus.x = g.between(Math.min(span.x, image.width/2), focus.x,
                         Math.max(image.width - span.x, image.width/2));
   }
   crop.x = g.between(0, focus.x - span.x, image.width);
   crop.width = g.between(0, focus.x + span.x, image.width) - crop.x;
-  target.x = (crop.x - focus.x + span.x) * g.zoom;
+  target.x = Math.floor((crop.x - focus.x + span.x) * g.zoom);
   target.width = crop.width * g.zoom;
   if (g.option.pan.free) {
-    focus.y = g.between(border - span.y, focus.y,
-                        image.height + span.y - border);
+    focus.y = g.between(-span.y, focus.y,
+                        image.height + span.y);
   } else {
     focus.y = g.between(Math.min(span.y, image.height/2), focus.y,
                         Math.max(image.height - span.y, image.height/2));
   }
   crop.y = g.between(0, focus.y - span.y, image.height);
   crop.height = g.between(0, focus.y + span.y, image.height) - crop.y;
-  target.y = (crop.y - focus.y + span.y) * g.zoom;
+  target.y = Math.floor((crop.y - focus.y + span.y) * g.zoom);
   target.height = crop.height * g.zoom;
-  //console.log('focus: '+JSON.stringify(focus));
-  //console.log('span: '+JSON.stringify(span));
-  //console.log('crop: '+JSON.stringify(crop));
-  //console.log('target: '+JSON.stringify(target));
+  if (false) {
+    console.log('focus: '+JSON.stringify(focus));
+    console.log('span: '+JSON.stringify(span));
+    console.log('crop: '+JSON.stringify(crop));
+    console.log('target: '+JSON.stringify(target));
+  }
 
   // Wipe the slate clean.
   context.clearRect(0, 0, canvas.width, canvas.height);
-  context.fillStyle = '#fff';
+  context.fillStyle = '#777';  // border
+  context.fillRect(target.x - g.border*g.zoom, target.y - g.border*g.zoom,
+      target.width + 2*g.border*g.zoom, target.height + 2*g.border*g.zoom);
+  context.fillStyle = '#fff';  // background
   context.fillRect(target.x, target.y, target.width, target.height);
 
   // Disable fuzzy interpolation.
@@ -90,7 +95,8 @@ SpriteHelper.paint = function() {
 
 SpriteHelper.zoomBy = function (delta) {
 	var g = SpriteHelper,
-      zoom = g.zoom;
+      zoom = g.zoom,
+      focus = g.focus;
   if ((delta >= 0 && zoom >= 1) || (delta < 0 && zoom > 1)) {
     g.zoom = zoom + delta;
   } else {
@@ -114,14 +120,42 @@ SpriteHelper.mouseDownCanvas = function (event) {
       mouseStart = { x: event.pageX, y: event.pageY };
   var mouseMove = function (event) {
     //console.log('mouse move: '+event.pageX+', '+event.pageY);
-    var dx = (mouseStart.x - event.pageX),
-        dy = (mouseStart.y - event.pageY);
+    var x = event.pageX,
+        y = event.pageY,
+        dx = x - mouseStart.x,
+        dy = y - mouseStart.y;
     if (g.zoom < 1 || !g.option.pan.scaled) {
       dx /= g.zoom;
       dy /= g.zoom;
     }
-    focus.x = focusStart.x + dx;
-    focus.y = focusStart.y + dy;
+    if (g.option.pan.reposition) {
+      var target = g.target,
+        canvas = g.canvas;
+      if (target.x == 0 && target.width == 0 && dx < 0) {
+        target.x = -g.target.width;
+        dx = 0;
+        focusStart.x = focus.x;
+        mouseStart.x = x;
+      } else if (target.x == canvas.width && target.width == 0 && dx > 0) {
+        target.x = canvas.width;
+        dx = 0;
+        focusStart.x = focus.x;
+        mouseStart.x = x;
+      }
+      if (target.y == 0 && target.height == 0 && dy < 0) {
+        target.y = -g.target.height;
+        dy = 0;
+        focusStart.y = focus.y;
+        mouseStart.y = y;
+      } else if (target.y == canvas.height && target.height == 0 && dy > 0) {
+        target.y = canvas.height;
+        dy = 0;
+        focusStart.y = focus.y;
+        mouseStart.y = y;
+      }
+    }
+    focus.x = focusStart.x - dx;
+    focus.y = focusStart.y - dy;
     g.paint();
   };
   var mouseUp = function (event) {
