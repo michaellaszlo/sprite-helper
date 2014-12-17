@@ -2,22 +2,33 @@ var SpriteHelper = {
   imageSource: 'sprites.png',
   border: 4,
   option: {
-    pan: { free: true, scaled: false, reposition: true }
+    pan: {
+      free: true,
+      scaled: false,
+      reposition: true,
+      release: {
+        ease: true,
+        hertz: 60,
+        factor: 0.9
+      }
+    }
   },
   mode: {
-    click: { pan: true }
+    click: {
+      pan: true
+    }
   }
 };
 
 SpriteHelper.reset = function () {
-	var g = SpriteHelper,
+  var g = SpriteHelper,
       image = g.image;
   g.zoom = 1;
   g.focus = { x: image.width / 2, y: image.height / 2 };
   g.paint();
 };
 
-SpriteHelper.between = function (low, x, high) {
+SpriteHelper.clamp = function (low, x, high) {
   if (x < low) {
     return low;
   } else if (x > high) {
@@ -28,7 +39,7 @@ SpriteHelper.between = function (low, x, high) {
 };
  
 SpriteHelper.paint = function() {
-	var g = SpriteHelper,
+  var g = SpriteHelper,
       canvas = g.canvas,
       context = canvas.context,
       image = g.image,
@@ -37,32 +48,32 @@ SpriteHelper.paint = function() {
       crop = {},
       target = g.target = {};
 
-  // Compute the crop dimensions within the scaled image and calculate
-  //  the target rectangle on the canvas. The focus is the center of the
-  //  view of the scaled image. The span is the distance from the focus
-  //  to the edge of the view.
+  // Compute the crop, which is the rectangle to be cut out of the image.
+  //  Then compute the target, which is the rectangle on the canvas to which
+  //  the crop is to be copied. The focus is the center of the crop. The
+  //  span is the distance from the focus to the edge of the crop.
   var span = { x: canvas.width / g.zoom / 2,
              y: canvas.height / g.zoom / 2 };
   if (g.option.pan.free) {
-    focus.x = g.between(-span.x, focus.x,
-                        image.width + span.x);
+    focus.x = g.clamp(-span.x, focus.x,
+                      image.width + span.x);
   } else {
-    focus.x = g.between(Math.min(span.x, image.width/2), focus.x,
-                        Math.max(image.width - span.x, image.width/2));
+    focus.x = g.clamp(Math.min(span.x, image.width/2), focus.x,
+                      Math.max(image.width - span.x, image.width/2));
   }
-  crop.x = g.between(0, focus.x - span.x, image.width);
-  crop.width = g.between(0, focus.x + span.x, image.width) - crop.x;
+  crop.x = g.clamp(0, focus.x - span.x, image.width);
+  crop.width = g.clamp(0, focus.x + span.x, image.width) - crop.x;
   target.x = Math.floor((crop.x - focus.x + span.x) * g.zoom);
   target.width = crop.width * g.zoom;
   if (g.option.pan.free) {
-    focus.y = g.between(-span.y, focus.y,
-                        image.height + span.y);
+    focus.y = g.clamp(-span.y, focus.y,
+                      image.height + span.y);
   } else {
-    focus.y = g.between(Math.min(span.y, image.height/2), focus.y,
-                        Math.max(image.height - span.y, image.height/2));
+    focus.y = g.clamp(Math.min(span.y, image.height/2), focus.y,
+                      Math.max(image.height - span.y, image.height/2));
   }
-  crop.y = g.between(0, focus.y - span.y, image.height);
-  crop.height = g.between(0, focus.y + span.y, image.height) - crop.y;
+  crop.y = g.clamp(0, focus.y - span.y, image.height);
+  crop.height = g.clamp(0, focus.y + span.y, image.height) - crop.y;
   target.y = Math.floor((crop.y - focus.y + span.y) * g.zoom);
   target.height = crop.height * g.zoom;
   if (false) {
@@ -94,7 +105,7 @@ SpriteHelper.paint = function() {
 };
 
 SpriteHelper.zoomBy = function (delta) {
-	var g = SpriteHelper,
+  var g = SpriteHelper,
       zoom = g.zoom,
       focus = g.focus;
   if ((delta >= 0 && zoom >= 1) || (delta < 0 && zoom > 1)) {
@@ -113,22 +124,32 @@ SpriteHelper.zoomOut = function () {
 
 // Click and drag to pan the canvas.
 SpriteHelper.mouseDownCanvas = function (event) {
-	var g = SpriteHelper,
+  var g = SpriteHelper,
       canvas = g.canvas,
       focus = g.focus,
+      pan = g.option.pan,
       focusStart = { x: focus.x, y: focus.y },
-      mouseStart = { x: event.pageX, y: event.pageY };
+      mouseStart = { x: event.pageX, y: event.pageY },
+      mouseCurrent = { x: mouseStart.x, y: mouseStart.y },
+      mouseJump = { x: 0, y: 0 };
+  if (pan.release.interval) {
+    window.clearInterval(pan.release.interval);
+  }
   var mouseMove = function (event) {
     //console.log('mouse move: '+event.pageX+', '+event.pageY);
     var x = event.pageX,
         y = event.pageY,
         dx = x - mouseStart.x,
         dy = y - mouseStart.y;
-    if (g.zoom < 1 || !g.option.pan.scaled) {
+    mouseJump.x = x - mouseCurrent.x;
+    mouseJump.y = y - mouseCurrent.y;
+    mouseCurrent.x = x;
+    mouseCurrent.y = y;
+    if (g.zoom < 1 || !pan.scaled) {
       dx /= g.zoom;
       dy /= g.zoom;
     }
-    if (g.option.pan.reposition) {
+    if (pan.reposition) {
       var target = g.target,
         canvas = g.canvas;
       if (target.x == 0 && target.width == 0 && dx < 0) {
@@ -159,7 +180,25 @@ SpriteHelper.mouseDownCanvas = function (event) {
     g.paint();
   };
   var mouseUp = function (event) {
-    //console.log('mouse up: '+event.pageX+', '+event.pageY);
+    if (pan.release.ease) {
+      var dx = mouseJump.x,
+          dy = mouseJump.y;
+      if (g.zoom < 1 || !pan.scaled) {
+        dx /= g.zoom;
+        dy /= g.zoom;
+      }
+      pan.release.interval = window.setInterval(function () {
+        dx *= pan.release.factor;
+        dy *= pan.release.factor;
+        if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
+          window.clearInterval(pan.release.interval);
+        } else {
+          focus.x -= dx;
+          focus.y -= dy;
+          g.paint();
+        }
+      }, 1000/pan.release.hertz);
+    }
     $(window).off('mousemove', mouseMove);
     $(window).off('mouseup', mouseUp);
   };
@@ -168,9 +207,9 @@ SpriteHelper.mouseDownCanvas = function (event) {
 };
 
 SpriteHelper.load = function () {
-	var g = SpriteHelper;
+  var g = SpriteHelper;
 
-	var canvas = g.canvas = document.getElementById('mainCanvas');
+  var canvas = g.canvas = document.getElementById('mainCanvas');
   canvas.context = canvas.getContext('2d');
   canvas.width = $(window).width();
   canvas.height = $(window).height();
