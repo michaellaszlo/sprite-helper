@@ -14,24 +14,32 @@
 + pan with momentum (easing)
 + find out why the indentation is screwy when I look at .js in the browser
 + fix final-sample flaw in pan easing
++ fix the scrollbar gap (appear to have fixed it by waiting for image.onload)
 
-- make control panel
++ display control panel at top
+
+- configure control panel for display at bottom, left, right
+
 - display zoom level
   - instant zoom: 1x
   - instant zoom: best fit
-- show map of view relative to scaled image
+
 - add widgets
   - panel location: top, bottom, left, right
+  - show map of view relative to scaled image
   - panning limit: bound or free
   - panning speed: unscaled, semi-scaled, scaled
   - panning release: abrupt or fling
   - zoom scale: constant, fibonacci, exponential, what else?
 
-- impose shrink limit
-
 - zoom toward mouse
 - zooming mode: toward mouse or toward center
 - option: animate bounding box upon zooming
+
+- impose limits on zoom-in and zoom-out
+
+- tidy up the page initialization process
+- display a message while the image is loading
 
 - cross-platform scaling?
 

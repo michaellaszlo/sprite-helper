@@ -1,6 +1,15 @@
 var SpriteHelper = {
   imageSource: 'sprites.png',
-  border: 4,
+  layout: {
+    image: {
+      border: 4
+    },
+    panel: {
+      content: 49,
+      border: 1,
+      borderColor: '#ccc'
+    }
+  },
   option: {
     pan: {
       free: true,
@@ -32,7 +41,6 @@ SpriteHelper.reset = function () {
       image = g.image;
   g.zoom = 1;
   g.focus = { x: image.width / 2, y: image.height / 2 };
-  g.paint();
 };
 
 SpriteHelper.clamp = function (low, x, high) {
@@ -59,8 +67,8 @@ SpriteHelper.paint = function() {
   //  Then compute the target, which is the rectangle on the canvas to which
   //  the crop is to be copied. The focus is the center of the crop. The
   //  span is the distance from the focus to the edge of the crop.
-  var span = { x: canvas.width / g.zoom / 2,
-             y: canvas.height / g.zoom / 2 };
+  var span = { x: canvas.width / zoom / 2,
+             y: canvas.height / zoom / 2 };
   if (g.option.pan.free) {
     focus.x = g.clamp(-span.x, focus.x,
                       image.width + span.x);
@@ -70,8 +78,8 @@ SpriteHelper.paint = function() {
   }
   crop.x = g.clamp(0, focus.x - span.x, image.width);
   crop.width = g.clamp(0, focus.x + span.x, image.width) - crop.x;
-  target.x = Math.floor((crop.x - focus.x + span.x) * g.zoom);
-  target.width = crop.width * g.zoom;
+  target.x = Math.floor((crop.x - focus.x + span.x) * zoom);
+  target.width = crop.width * zoom;
   if (g.option.pan.free) {
     focus.y = g.clamp(-span.y, focus.y,
                       image.height + span.y);
@@ -81,8 +89,8 @@ SpriteHelper.paint = function() {
   }
   crop.y = g.clamp(0, focus.y - span.y, image.height);
   crop.height = g.clamp(0, focus.y + span.y, image.height) - crop.y;
-  target.y = Math.floor((crop.y - focus.y + span.y) * g.zoom);
-  target.height = crop.height * g.zoom;
+  target.y = Math.floor((crop.y - focus.y + span.y) * zoom);
+  target.height = crop.height * zoom;
   g.message('focus: '+JSON.stringify(focus));
   g.message('span: '+JSON.stringify(span));
   g.message('crop: '+JSON.stringify(crop));
@@ -90,10 +98,11 @@ SpriteHelper.paint = function() {
 
   // Wipe the slate clean.
   context.clearRect(0, 0, canvas.width, canvas.height);
-  context.fillStyle = '#777';  // border
-  context.fillRect(target.x - g.border*g.zoom, target.y - g.border*g.zoom,
-      target.width + 2*g.border*g.zoom, target.height + 2*g.border*g.zoom);
-  context.fillStyle = '#fff';  // background
+  context.fillStyle = '#777';  // border color
+  var border = g.layout.image.border;
+  context.fillRect(target.x - border*zoom, target.y - border*zoom,
+      target.width + 2*border*zoom, target.height + 2*border*zoom);
+  context.fillStyle = '#fff';  // background color
   context.fillRect(target.x, target.y, target.width, target.height);
 
   // Disable fuzzy interpolation.
@@ -218,25 +227,11 @@ SpriteHelper.mouseDownCanvas = function (event) {
 };
 
 SpriteHelper.load = function () {
-  var g = SpriteHelper;
-
-  var canvas = g.canvas = document.getElementById('mainCanvas');
+  var g = SpriteHelper,
+      panel = g.panel = document.getElementById('controlPanel'),
+      canvas = g.canvas = document.getElementById('mainCanvas');
   canvas.context = canvas.getContext('2d');
-  canvas.width = $(window).width();
-  canvas.height = $(window).height();
-
   $(canvas).mousedown(g.mouseDownCanvas);
-
-  g.image = new Image();
-  g.image.src = g.imageSource;
-  g.image.onload = function () {
-    g.reset();
-    $(window).on('resize', function () {
-      canvas.width = $(window).width();
-      canvas.height = $(window).height();
-      g.paint();
-    });
-  };
 
   $(window).keydown(function (event) {
     var keyDownHandlers = {
@@ -250,6 +245,34 @@ SpriteHelper.load = function () {
       handler();
     }
   });
+
+  var layout = g.layout,
+      panelSize = layout.panel.content + layout.panel.border;
+
+  var resize = function () {
+    canvas.style.top = panelSize + 'px';
+    canvas.height = $(window).height() - panelSize;
+    canvas.width = $(window).width();
+    panel.style.width = canvas.width + 'px';
+    panel.style.height = layout.panel.content + 'px';
+    panel.style.borderBottom = layout.panel.border + 'px solid ' +
+        layout.panel.borderColor;
+    canvas.width = $(window).width();
+    canvas.height = $(window).height() - panelSize;
+    g.paint();
+  };
+
+  $(window).on('resize', resize);
+
+  g.image = new Image();
+  g.image.src = g.imageSource;
+  g.image.onload = function () {
+    g.reset();
+    resize();
+    canvas.style.display = 'block';
+    panel.style.display = 'block';
+  };
+
 };
 
 $(document).ready(SpriteHelper.load);

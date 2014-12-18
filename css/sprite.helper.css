@@ -10,7 +10,15 @@ body {
 #wrapper {
 }
 
+#controlPanel {
+  position: fixed;
+  background: #fff;
+  display: none;
+}
+
 #mainCanvas {
+  position: fixed;
   background: url(../i/blank.2.png);
+  display: none;
 }
 
