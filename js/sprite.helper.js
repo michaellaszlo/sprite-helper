@@ -17,8 +17,15 @@ var SpriteHelper = {
     click: {
       pan: true
     }
-  }
+  },
+  debug: false
 };
+
+SpriteHelper.message = function () {
+  if (SpriteHelper.debug) {
+    console.log(arguments);
+  }
+}
 
 SpriteHelper.reset = function () {
   var g = SpriteHelper,
@@ -76,12 +83,10 @@ SpriteHelper.paint = function() {
   crop.height = g.clamp(0, focus.y + span.y, image.height) - crop.y;
   target.y = Math.floor((crop.y - focus.y + span.y) * g.zoom);
   target.height = crop.height * g.zoom;
-  if (false) {
-    console.log('focus: '+JSON.stringify(focus));
-    console.log('span: '+JSON.stringify(span));
-    console.log('crop: '+JSON.stringify(crop));
-    console.log('target: '+JSON.stringify(target));
-  }
+  g.message('focus: '+JSON.stringify(focus));
+  g.message('span: '+JSON.stringify(span));
+  g.message('crop: '+JSON.stringify(crop));
+  g.message('target: '+JSON.stringify(target));
 
   // Wipe the slate clean.
   context.clearRect(0, 0, canvas.width, canvas.height);
@@ -136,7 +141,7 @@ SpriteHelper.mouseDownCanvas = function (event) {
     window.clearInterval(pan.release.interval);
   }
   var mouseMove = function (event) {
-    //console.log('mouse move: '+event.pageX+', '+event.pageY);
+    g.message('mouse move: '+event.pageX+', '+event.pageY);
     var x = event.pageX,
         y = event.pageY,
         dx = x - mouseStart.x,
@@ -182,22 +187,28 @@ SpriteHelper.mouseDownCanvas = function (event) {
   var mouseUp = function (event) {
     if (pan.release.ease) {
       var dx = mouseJump.x,
-          dy = mouseJump.y;
-      if (g.zoom < 1 || !pan.scaled) {
-        dx /= g.zoom;
-        dy /= g.zoom;
-      }
-      pan.release.interval = window.setInterval(function () {
-        dx *= pan.release.factor;
-        dy *= pan.release.factor;
-        if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
-          window.clearInterval(pan.release.interval);
-        } else {
-          focus.x -= dx;
-          focus.y -= dy;
-          g.paint();
+          dy = mouseJump.y,
+          jump = Math.sqrt(dx*dx + dy*dy),
+          threshold = 1;  // Stop easing once the change is less than this.
+      if (jump >= 5) {
+        g.message(dx, dy, jump);
+        if (g.zoom < 1 || !pan.scaled) {
+          dx /= g.zoom;
+          dy /= g.zoom;
+          threshold /= g.zoom;
         }
-      }, 1000/pan.release.hertz);
+        pan.release.interval = window.setInterval(function () {
+          dx *= pan.release.factor;
+          dy *= pan.release.factor;
+          if (Math.sqrt(dx*dx + dy*dy) < threshold) {
+            window.clearInterval(pan.release.interval);
+          } else {
+            focus.x -= dx;
+            focus.y -= dy;
+            g.paint();
+          }
+        }, 1000/pan.release.hertz);
+      }
     }
     $(window).off('mousemove', mouseMove);
     $(window).off('mouseup', mouseUp);
@@ -234,7 +245,7 @@ SpriteHelper.load = function () {
     };
     var handler = keyDownHandlers[event.which];
     if (handler === undefined) {
-      console.log('key down: '+event.which);
+      g.message('key down: '+event.which);
     } else {
       handler();
     }

@@ -11,9 +11,9 @@
   test: click beyond image, drag toward image and off screen, then drag back
   solution: pan the image as soon as the cursor starts dragging back
 
-+ pan with momentum (ease)
-
++ pan with momentum (easing)
 + find out why the indentation is screwy when I look at .js in the browser
++ fix final-sample flaw in pan easing
 
 - make control panel
 - display zoom level
