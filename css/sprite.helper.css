@@ -1,4 +1,4 @@
-html, body, div, p {
+html, body, div, p, ul {
   margin: 0;
   padding: 0;
 }
@@ -10,15 +10,36 @@ body {
 #wrapper {
 }
 
-#controlPanel {
-  position: fixed;
-  background: #fff;
-  display: none;
-}
-
 #mainCanvas {
   position: fixed;
   background: url(../i/blank.2.png);
   display: none;
+}
+
+#controlPanel {
+  position: fixed;
+  background: #fff;
+  display: none;
+  font-family: sans-serif;
+  font-size: 18px;
+}
+
+ul.buttons {
+  margin: 15px 0 0 10px;
+}
+ul.buttons li {
+  display: inline;
+}
+.button {
+  border: 2px solid #888;
+  border-radius: 2px;
+  display: inline;
+  padding: 3px 6px;
+  cursor: pointer;
+  margin-right: 5px;
+}
+.button:hover {
+  border-color: #444;
+  background: #ffc;
 }
 

@@ -135,6 +135,14 @@ SpriteHelper.zoomIn = function () {
 SpriteHelper.zoomOut = function () {
   SpriteHelper.zoomBy(-1);
 };
+SpriteHelper.reset1x = function () {
+  var g = SpriteHelper;
+  g.reset();
+  g.paint();
+};
+SpriteHelper.resetFit = function () {
+  console.log('resetFit');
+};
 
 // Click and drag to pan the canvas.
 SpriteHelper.mouseDownCanvas = function (event) {
@@ -248,6 +256,9 @@ SpriteHelper.load = function () {
 
   var layout = g.layout,
       panelSize = layout.panel.content + layout.panel.border;
+
+  $('#reset1x').mousedown(g.reset1x);
+  $('#resetFit').mousedown(g.resetFit);
 
   var resize = function () {
     canvas.style.top = panelSize + 'px';

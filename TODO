@@ -18,19 +18,20 @@
 
 + display control panel at top
 
-- configure control panel for display at bottom, left, right
-
-- display zoom level
-  - instant zoom: 1x
-  - instant zoom: best fit
-
-- add widgets
-  - panel location: top, bottom, left, right
-  - show map of view relative to scaled image
+- make widgets
+  + reset: 1x
+  - reset: fit
+  - display zoom level
   - panning limit: bound or free
-  - panning speed: unscaled, semi-scaled, scaled
   - panning release: abrupt or fling
   - zoom scale: constant, fibonacci, exponential, what else?
+  - panning speed: unscaled, semi-scaled, scaled
+
+- configure control panel for display at bottom, left, right
+
+- more widgets
+  - panel location: top, bottom, left, right
+  - show map of view relative to scaled image
 
 - zoom toward mouse
 - zooming mode: toward mouse or toward center
