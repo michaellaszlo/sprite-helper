@@ -140,8 +140,23 @@ SpriteHelper.reset1x = function () {
   g.reset();
   g.paint();
 };
-SpriteHelper.resetFit = function () {
-  console.log('resetFit');
+
+SpriteHelper.autoFrame = function () {
+  var g = SpriteHelper,
+      canvas = g.canvas, width = canvas.width, height = canvas.height,
+      imageData = canvas.context.getImageData(0, 0, width, height),
+      data = imageData.data;
+  var i = 0;
+  for (var y = 0; y < height; ++y) {
+    for (var x = 0; x < width; ++x) {
+      var r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
+      if (r+g+b+a == 0) {
+        data[i+3] = 255;
+      }
+      i += 4;
+    }
+  }
+  canvas.context.putImageData(imageData, 0, 0);
 };
 
 // Click and drag to pan the canvas.
@@ -258,7 +273,7 @@ SpriteHelper.load = function () {
       panelSize = layout.panel.content + layout.panel.border;
 
   $('#reset1x').mousedown(g.reset1x);
-  $('#resetFit').mousedown(g.resetFit);
+  $('#autoFrame').mousedown(g.autoFrame);
 
   var resize = function () {
     canvas.style.top = panelSize + 'px';

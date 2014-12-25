@@ -18,46 +18,16 @@
 
 + display control panel at top
 
-- make widgets
-  + reset: 1x
-  - reset: fit
-  - display zoom level
-  - panning limit: bound or free
-  - panning release: abrupt or fling
-  - zoom scale: constant, fibonacci, exponential, what else?
-  - panning speed: unscaled, semi-scaled, scaled
-
-- configure control panel for display at bottom, left, right
-
-- more widgets
-  - panel location: top, bottom, left, right
-  - show map of view relative to scaled image
-
-- zoom toward mouse
-- zooming mode: toward mouse or toward center
-- option: animate bounding box upon zooming
-
-- impose limits on zoom-in and zoom-out
-
-- tidy up the page initialization process
-- display a message while the image is loading
-
-- cross-platform scaling?
-
-- draw frame
 - auto-frame
+- draw frame
 - undo?
 - lock frame?
-
-- color pickers
-  - background
-  - bounding box
-  - bounding border
 
 - manually draw polygon
   - add point
   - move point
   - delete point
+
 - automatically compute polygon
   - choose pixel threshold
 - undo?
@@ -65,4 +35,35 @@
 
 - generate code
 - code options
+
+- zoom toward mouse
+- zooming mode: toward mouse or toward center
+- option: animate bounding box upon zooming
+
+- impose limits on zoom-in and zoom-out
+
+widgets:
++ reset button
+- display zoom level
+- zoom in, zoom out
+- panning limit: bound or free
+- panning release: abrupt or fling
+- zoom scale: constant, fibonacci, exponential, what else?
+- panning speed: unscaled, semi-scaled, scaled
+- panel location: top, bottom, left, right
+- show map of view relative to scaled image
+
+- make controls unselectable
+
+- configure control panel for display at bottom, left, right
+
+- tidy up the page initialization process
+- display a message while the image is loading
+
+- cross-platform scaling?
+
+- color pickers
+  - background
+  - bounding box
+  - bounding border
 
