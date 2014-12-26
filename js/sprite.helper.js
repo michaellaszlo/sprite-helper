@@ -143,8 +143,9 @@ SpriteHelper.reset1x = function () {
 
 SpriteHelper.autoFrame = function () {
   var g = SpriteHelper,
-      canvas = g.canvas, width = canvas.width, height = canvas.height,
-      imageData = canvas.context.getImageData(0, 0, width, height),
+      image = g.image, canvas = g.canvas,
+      width = image.width, height = image.height,
+      imageData = g.pixelLayer.context.getImageData(0, 0, width, height),
       data = imageData.data;
   var i = 0;
   for (var y = 0; y < height; ++y) {
@@ -297,6 +298,12 @@ SpriteHelper.load = function () {
     resize();
     canvas.style.display = 'block';
     panel.style.display = 'block';
+    var boxLayer = g.boxLayer = document.getElementById('boxLayer'),
+        pixelLayer = g.pixelLayer = document.getElementById('pixelLayer');
+    boxLayer.width = pixelLayer.width = g.image.width;
+    boxLayer.height = pixelLayer.height = g.image.height;
+    pixelLayer.context = pixelLayer.getContext('2d');
+    pixelLayer.context.drawImage(g.image, 0, 0);
   };
 
 };
