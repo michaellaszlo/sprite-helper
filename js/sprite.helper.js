@@ -151,8 +151,8 @@ SpriteHelper.autoFrame = function () {
   for (var y = 0; y < height; ++y) {
     for (var x = 0; x < width; ++x) {
       var r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
-      if (r+g+b+a == 0) {
-        data[i+3] = 255;
+      if (r+g+b != 0) {
+        data[i] = data[i+1] = data[i+2] = data[i+3] = 128;
       }
       i += 4;
     }
@@ -304,6 +304,7 @@ SpriteHelper.load = function () {
     boxLayer.height = pixelLayer.height = g.image.height;
     pixelLayer.context = pixelLayer.getContext('2d');
     pixelLayer.context.drawImage(g.image, 0, 0);
+    g.autoFrame();
   };
 
 };
