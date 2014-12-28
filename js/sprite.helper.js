@@ -146,18 +146,57 @@ SpriteHelper.autoFrame = function () {
       image = g.image, canvas = g.canvas,
       width = image.width, height = image.height,
       imageData = g.pixelLayer.context.getImageData(0, 0, width, height),
-      data = imageData.data;
+      data = imageData.data,
+      grid = new Array(height);
   var i = 0;
   for (var y = 0; y < height; ++y) {
+    grid[y] = new Array(width);
     for (var x = 0; x < width; ++x) {
-      var r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
-      if (r+g+b != 0) {
-        data[i] = data[i+1] = data[i+2] = data[i+3] = 128;
-      }
+      var cell = grid[y][x] = {
+        r: data[i], g: data[i+1], b: data[i+2], a: data[i+3]
+      };
+      cell.visible = (cell.r+cell.g+cell.b != 0);
       i += 4;
     }
   }
-  canvas.context.putImageData(imageData, 0, 0);
+  var groups = [], dx = [0, 1, 0, -1], dy = [-1, 0, 1, 0];
+  function flood(x, y, id) {
+    grid[y][x].id = id;
+    var group = groups[id];
+    group.min.x = Math.min(group.min.x, x);
+    group.min.y = Math.min(group.min.y, y);
+    group.max.x = Math.max(group.max.x, x);
+    group.max.y = Math.max(group.max.y, y);
+    for (var i = 0; i < 4; ++i) {
+      var X = x+dx[i], Y = y+dy[i];
+      if (X >= 0 && X < width && Y >= 0 && Y < height) {
+        var cell = grid[Y][X];
+        if (cell.visible && cell.id === undefined) {
+          flood(X, Y, id);
+        }
+      }
+    }
+  }
+  for (var y = 0; y < height; ++y) {
+    for (var x = 0; x < width; ++x) {
+      var cell = grid[y][x];
+      if (cell.visible && cell.id === undefined) {
+        var id = groups.length;
+        groups.push({ min: { x: x, y: y }, max: { x: x, y: y } });
+        flood(x, y, id);
+      }
+    }
+  }
+  var boxLayer = g.boxLayer;
+  boxLayer.context.fillStyle = '#999';
+  for (var i = 0; i < groups.length; ++i) {
+    var group = groups[i],
+      min = group.min, max = group.max;
+    group.width = max.x - min.x;
+    group.height = max.y - min.y;
+    boxLayer.context.fillRect(min.x, min.y, group.width, group.height);
+  }
+  canvas.context.drawImage(boxLayer, 0, 0);
 };
 
 // Click and drag to pan the canvas.
@@ -302,6 +341,7 @@ SpriteHelper.load = function () {
         pixelLayer = g.pixelLayer = document.getElementById('pixelLayer');
     boxLayer.width = pixelLayer.width = g.image.width;
     boxLayer.height = pixelLayer.height = g.image.height;
+    boxLayer.context = boxLayer.getContext('2d');
     pixelLayer.context = pixelLayer.getContext('2d');
     pixelLayer.context.drawImage(g.image, 0, 0);
     g.autoFrame();
