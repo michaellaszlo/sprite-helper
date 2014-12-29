@@ -195,13 +195,21 @@ SpriteHelper.autoFrame = function () {
     }
   }
   var boxLayer = g.boxLayer;
-  boxLayer.context.fillStyle = '#999';
   for (var i = 0; i < groups.length; ++i) {
     var group = groups[i],
       min = group.min, max = group.max;
     group.width = max.x - min.x + 1;
     group.height = max.y - min.y + 1;
+    boxLayer.context.fillStyle = '#999';
     boxLayer.context.fillRect(min.x, min.y, group.width, group.height);
+    boxLayer.context.fillStyle = '#000';
+    for (var y = min.y; y <= max.y; ++y) {
+      for (var x = min.x; x <= max.x; ++x) {
+        if (grid[y][x].visible) {
+          boxLayer.context.fillRect(x, y, 1, 1);
+        }
+      }
+    }
   }
   g.paint();
 };

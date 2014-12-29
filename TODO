@@ -18,10 +18,19 @@
 
 + display control panel at top
 
-- auto-frame
-- draw frame
-- undo?
-- lock frame?
++ autobox calculation
+
+- layers
+  - autobox
+  - boxes (user-selected)
+  - image
+  - outline (using zero threshold)
+  - autopoly
+  - polygons (user-selected)
+
+- make controls unselectable
+
+- pixel inspector: view color in rgba and hex
 
 - manually draw polygon
   - add point
@@ -30,8 +39,6 @@
 
 - automatically compute polygon
   - choose pixel threshold
-- undo?
-- lock polygon?
 
 - generate code
 - code options
@@ -52,8 +59,6 @@ widgets:
 - panning speed: unscaled, semi-scaled, scaled
 - panel location: top, bottom, left, right
 - show map of view relative to scaled image
-
-- make controls unselectable
 
 - configure control panel for display at bottom, left, right
 
