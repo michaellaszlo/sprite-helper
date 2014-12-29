@@ -106,16 +106,23 @@ SpriteHelper.paint = function() {
   context.fillRect(target.x, target.y, target.width, target.height);
 
   // Disable fuzzy interpolation.
-  canvas.context.mozImageSmoothingEnabled = false;
-  canvas.context.webkitImageSmoothingEnabled = false;
-  canvas.context.msImageSmoothingEnabled = false;
-  canvas.context.imageSmoothingEnabled = false;
+  context.mozImageSmoothingEnabled = false;
+  context.webkitImageSmoothingEnabled = false;
+  context.msImageSmoothingEnabled = false;
+  context.imageSmoothingEnabled = false;
 
   // Scale the crop rectangle back to the native image and copy it to
   //   the target rectangle on the canvas.
-  context.drawImage(g.image,
-      crop.x, crop.y, crop.width, crop.height,
-      target.x, target.y, target.width, target.height);
+  var sources = [g.boxLayer, g.image];
+  for (var i = 0; i < sources.length; ++i) {
+    if (sources[i] === undefined) {
+      console.log('sources['+i+'] is undefined');
+      continue;
+    }
+    context.drawImage(sources[i],
+        crop.x, crop.y, crop.width, crop.height,
+        target.x, target.y, target.width, target.height);
+  }
 };
 
 SpriteHelper.zoomBy = function (delta) {
@@ -192,11 +199,11 @@ SpriteHelper.autoFrame = function () {
   for (var i = 0; i < groups.length; ++i) {
     var group = groups[i],
       min = group.min, max = group.max;
-    group.width = max.x - min.x;
-    group.height = max.y - min.y;
+    group.width = max.x - min.x + 1;
+    group.height = max.y - min.y + 1;
     boxLayer.context.fillRect(min.x, min.y, group.width, group.height);
   }
-  canvas.context.drawImage(boxLayer, 0, 0);
+  g.paint();
 };
 
 // Click and drag to pan the canvas.
