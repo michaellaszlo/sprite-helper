@@ -42,3 +42,7 @@ body {
   background: #ffc;
 }
 
+input.inactive {
+  color: #999;
+}
+

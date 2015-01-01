@@ -113,15 +113,14 @@ SpriteHelper.paint = function() {
 
   // Scale the crop rectangle back to the native image and copy it to
   //   the target rectangle on the canvas.
-  var names = ['autobox', 'shadow', 'image'];
-  for (var i = 0; i < names.length; ++i) {
-    var layer = g.layers[names[i]];
-    console.log('painting layer '+names[i]);
-    context.drawImage(layer.canvas,
-        crop.x, crop.y, crop.width, crop.height,
-        target.x, target.y, target.width, target.height);
+  for (var i = 0; i < g.layers.length; ++i) {
+    var layer = g.layers[i];
+    if (layer.checkbox.checked) {
+      context.drawImage(layer.canvas,
+          crop.x, crop.y, crop.width, crop.height,
+          target.x, target.y, target.width, target.height);
+    }
   }
-  context.drawImage(g.layers.autobox.canvas, 0, 0);
 };
 
 SpriteHelper.zoomBy = function (delta) {
@@ -153,14 +152,14 @@ SpriteHelper.autoPaint = function () {
       width = image.width,
       height = image.height,
       canvas = g.canvas,
-      layers = g.layers,
-      autoboxContext = layers.autobox.canvas.context,
-      shadowContext = layers.shadow.canvas.context,
-      imageContext = layers.image.canvas.context,
-      data = imageContext.getImageData(0, 0, width, height).data,
+      layer = g.layer,
+      autoboxContext = layer.autobox.canvas.context,
+      shadowContext = layer.shadow.canvas.context,
+      imageContext = layer.image.canvas.context,
       grid = new Array(height);
   imageContext.drawImage(g.image, 0, 0);
-  var i = 0;
+  var data = imageContext.getImageData(0, 0, width, height).data,
+    i = 0;
   for (var y = 0; y < height; ++y) {
     grid[y] = new Array(width);
     for (var x = 0; x < width; ++x) {
@@ -331,34 +330,34 @@ SpriteHelper.load = function () {
 
   g.image = new Image();
   g.image.src = g.imageSource;
-  console.log(canvas);
   g.image.onload = function () {
-    console.log(panel);
-    console.log(canvas);
     canvas.style.display = 'block';
     panel.style.display = 'block';
-    g.layers = {};
-    g.layers.autobox = {
-      canvas: document.createElement('canvas'),
-      checkbox: $('#showAutobox')
-    };
-    g.layers.shadow = {
-      canvas: document.createElement('canvas'),
-      checkbox: $('#showShadow')
-    };
-    g.layers.image = {
-      canvas: document.createElement('canvas'),
-      checkbox: $('#showImage')
-    };
+    g.layer = {};
+    g.layers = [];
     var names = ['autobox', 'shadow', 'image'];
     for (var i = 0; i < names.length; ++i) {
-      var x = g.layers[names[i]].canvas;
-      x.width = g.image.width;
-      x.height = g.image.height;
-      x.style.display = 'none';
-      //document.appendChild(x);
-      x.context = x.getContext('2d');
+      var name = names[i];
+      var layer = g.layer[name] = {
+        name: name,
+        checkbox: document.getElementById(
+            'show' + name[0].toUpperCase() + name.substring(1)),
+        canvas: document.createElement('canvas')
+      };
+      layer.checkbox.onclick = function () {
+        g.paint();
+      };
+      layer.canvas.width = g.image.width;
+      layer.canvas.height = g.image.height;
+      layer.canvas.style.display = 'none';
+      layer.canvas.context = layer.canvas.getContext('2d');
+      g.layers.push(layer);
     }
+    g.layer.autobox.checkbox.checked = true;
+    g.layer.image.checkbox.checked = true;
+    document.getElementById('showBoxes').disabled = true;
+    document.getElementById('showAutopoly').disabled = true;
+    document.getElementById('showPolygons').disabled = true;
     g.reset();
     g.autoPaint();
     resize();

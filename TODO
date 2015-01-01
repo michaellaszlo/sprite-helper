@@ -18,17 +18,26 @@
 
 + display control panel at top
 
+- polygons
+  - clarify the concept
+  - define the relationship between polygons and boxes
+  - generate zero-threshold polygons
+  - add threshold options
+
 - layer selection
-  - checkboxes
+  + checkboxes
   - activate checkboxes
   - add options
-  - graphical checkbox
+    - colors
+    - transparency?
+    - order?
+  - replace checkboxes with graphical elements
 
-- layer generation
-  - autobox
+- layer contents
+  + autobox
   - boxes (user-selected)
-  - shadow (zero threshold)
-  - image
+  + shadow (zero threshold)
+  + image
   - autopoly
   - polygons (user-selected)
 
