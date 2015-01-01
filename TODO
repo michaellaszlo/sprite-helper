@@ -18,15 +18,22 @@
 
 + display control panel at top
 
-+ autobox calculation
+- layer selection
+  - checkboxes
+  - activate checkboxes
+  - add options
+  - graphical checkbox
 
-- layers
+- layer generation
   - autobox
   - boxes (user-selected)
+  - shadow (zero threshold)
   - image
-  - outline (using zero threshold)
   - autopoly
   - polygons (user-selected)
+
+- write an iterative version of flood-fill for autobox generation
+- instead of painting to shadowContext, make and copy image data?
 
 - make controls unselectable
 

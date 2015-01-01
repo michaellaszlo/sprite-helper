@@ -113,16 +113,15 @@ SpriteHelper.paint = function() {
 
   // Scale the crop rectangle back to the native image and copy it to
   //   the target rectangle on the canvas.
-  var sources = [g.boxLayer, g.image];
-  for (var i = 0; i < sources.length; ++i) {
-    if (sources[i] === undefined) {
-      console.log('sources['+i+'] is undefined');
-      continue;
-    }
-    context.drawImage(sources[i],
+  var names = ['autobox', 'shadow', 'image'];
+  for (var i = 0; i < names.length; ++i) {
+    var layer = g.layers[names[i]];
+    console.log('painting layer '+names[i]);
+    context.drawImage(layer.canvas,
         crop.x, crop.y, crop.width, crop.height,
         target.x, target.y, target.width, target.height);
   }
+  context.drawImage(g.layers.autobox.canvas, 0, 0);
 };
 
 SpriteHelper.zoomBy = function (delta) {
@@ -148,13 +147,19 @@ SpriteHelper.reset1x = function () {
   g.paint();
 };
 
-SpriteHelper.autoFrame = function () {
+SpriteHelper.autoPaint = function () {
   var g = SpriteHelper,
-      image = g.image, canvas = g.canvas,
-      width = image.width, height = image.height,
-      imageData = g.pixelLayer.context.getImageData(0, 0, width, height),
-      data = imageData.data,
+      image = g.image,
+      width = image.width,
+      height = image.height,
+      canvas = g.canvas,
+      layers = g.layers,
+      autoboxContext = layers.autobox.canvas.context,
+      shadowContext = layers.shadow.canvas.context,
+      imageContext = layers.image.canvas.context,
+      data = imageContext.getImageData(0, 0, width, height).data,
       grid = new Array(height);
+  imageContext.drawImage(g.image, 0, 0);
   var i = 0;
   for (var y = 0; y < height; ++y) {
     grid[y] = new Array(width);
@@ -194,24 +199,22 @@ SpriteHelper.autoFrame = function () {
       }
     }
   }
-  var boxLayer = g.boxLayer;
+  autoboxContext.fillStyle = '#999';
+  shadowContext.fillStyle = '#000';
   for (var i = 0; i < groups.length; ++i) {
     var group = groups[i],
       min = group.min, max = group.max;
     group.width = max.x - min.x + 1;
     group.height = max.y - min.y + 1;
-    boxLayer.context.fillStyle = '#999';
-    boxLayer.context.fillRect(min.x, min.y, group.width, group.height);
-    boxLayer.context.fillStyle = '#000';
+    autoboxContext.fillRect(min.x, min.y, group.width, group.height);
     for (var y = min.y; y <= max.y; ++y) {
       for (var x = min.x; x <= max.x; ++x) {
         if (grid[y][x].visible) {
-          boxLayer.context.fillRect(x, y, 1, 1);
+          shadowContext.fillRect(x, y, 1, 1);
         }
       }
     }
   }
-  g.paint();
 };
 
 // Click and drag to pan the canvas.
@@ -309,26 +312,9 @@ SpriteHelper.load = function () {
       panel = g.panel = document.getElementById('controlPanel'),
       canvas = g.canvas = document.getElementById('mainCanvas');
   canvas.context = canvas.getContext('2d');
-  $(canvas).mousedown(g.mouseDownCanvas);
-
-  $(window).keydown(function (event) {
-    var keyDownHandlers = {
-      68: g.zoomOut,
-      70: g.zoomIn
-    };
-    var handler = keyDownHandlers[event.which];
-    if (handler === undefined) {
-      g.message('key down: '+event.which);
-    } else {
-      handler();
-    }
-  });
 
   var layout = g.layout,
       panelSize = layout.panel.content + layout.panel.border;
-
-  $('#reset1x').mousedown(g.reset1x);
-  $('#autoFrame').mousedown(g.autoFrame);
 
   var resize = function () {
     canvas.style.top = panelSize + 'px';
@@ -343,25 +329,56 @@ SpriteHelper.load = function () {
     g.paint();
   };
 
-  $(window).on('resize', resize);
-
   g.image = new Image();
   g.image.src = g.imageSource;
+  console.log(canvas);
   g.image.onload = function () {
-    g.reset();
-    resize();
+    console.log(panel);
+    console.log(canvas);
     canvas.style.display = 'block';
     panel.style.display = 'block';
-    var boxLayer = g.boxLayer = document.getElementById('boxLayer'),
-        pixelLayer = g.pixelLayer = document.getElementById('pixelLayer');
-    boxLayer.width = pixelLayer.width = g.image.width;
-    boxLayer.height = pixelLayer.height = g.image.height;
-    boxLayer.context = boxLayer.getContext('2d');
-    pixelLayer.context = pixelLayer.getContext('2d');
-    pixelLayer.context.drawImage(g.image, 0, 0);
-    g.autoFrame();
+    g.layers = {};
+    g.layers.autobox = {
+      canvas: document.createElement('canvas'),
+      checkbox: $('#showAutobox')
+    };
+    g.layers.shadow = {
+      canvas: document.createElement('canvas'),
+      checkbox: $('#showShadow')
+    };
+    g.layers.image = {
+      canvas: document.createElement('canvas'),
+      checkbox: $('#showImage')
+    };
+    var names = ['autobox', 'shadow', 'image'];
+    for (var i = 0; i < names.length; ++i) {
+      var x = g.layers[names[i]].canvas;
+      x.width = g.image.width;
+      x.height = g.image.height;
+      x.style.display = 'none';
+      //document.appendChild(x);
+      x.context = x.getContext('2d');
+    }
+    g.reset();
+    g.autoPaint();
+    resize();
+    $(window).on('resize', resize);
+    $(canvas).mousedown(g.mouseDownCanvas);
+    $(window).keydown(function (event) {
+      var keyDownHandlers = {
+        68: g.zoomOut,
+        70: g.zoomIn
+      };
+      var handler = keyDownHandlers[event.which];
+      if (handler === undefined) {
+        g.message('key down: '+event.which);
+      } else {
+        handler();
+      }
+    });
+    $('#reset1x').mousedown(g.reset1x);
   };
 
 };
 
-$(document).ready(SpriteHelper.load);
+$(window).load(SpriteHelper.load);
