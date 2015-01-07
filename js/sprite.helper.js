@@ -170,14 +170,16 @@ SpriteHelper.autoPaint = function () {
       i += 4;
     }
   }
-  var groups = [], dx = [0, 1, 0, -1], dy = [-1, 0, 1, 0];
+  var shapes = [], dx = [0, 1, 0, -1], dy = [-1, 0, 1, 0];
+
+  // Flood fill to find shapes, i.e., sets of contiguous cells.
   function flood(x, y, id) {
     grid[y][x].id = id;
-    var group = groups[id];
-    group.min.x = Math.min(group.min.x, x);
-    group.min.y = Math.min(group.min.y, y);
-    group.max.x = Math.max(group.max.x, x);
-    group.max.y = Math.max(group.max.y, y);
+    var shape = shapes[id];
+    shape.min.x = Math.min(shape.min.x, x);
+    shape.min.y = Math.min(shape.min.y, y);
+    shape.max.x = Math.max(shape.max.x, x);
+    shape.max.y = Math.max(shape.max.y, y);
     for (var i = 0; i < 4; ++i) {
       var X = x+dx[i], Y = y+dy[i];
       if (X >= 0 && X < width && Y >= 0 && Y < height) {
@@ -192,20 +194,40 @@ SpriteHelper.autoPaint = function () {
     for (var x = 0; x < width; ++x) {
       var cell = grid[y][x];
       if (cell.visible && cell.id === undefined) {
-        var id = groups.length;
-        groups.push({ min: { x: x, y: y }, max: { x: x, y: y } });
+        var id = shapes.length;
+        shapes.push({ min: { x: x, y: y }, max: { x: x, y: y } });
         flood(x, y, id);
       }
     }
   }
+
+  // To make an auto-polygon for a shape:
+  // - find a border pixel
+  // - flood-fill border pixels
+  // - during the flood fill, find the border segments of each border pixel
+  //   (note that a segment may border a hole in the shape)
+  // - somehow find all segments on the outside of the shape
+  // - traverse the segments to make an ordered loop
+  // - merge segments based on some scheme
+  // - calculate a sequence of points based on the segments
+  for (var id = 0; id < shapes.length; ++id) {
+    var shape = shapes[id];
+    // Find a border pixel.
+    var x = shape.min.x, y = shape.min.y;
+    while (grid[y][x].id != id) {
+      ++x;
+    }
+    console.log('id = '+id+', border pixel: y = '+y+', x = '+x);
+  }
+
   autoboxContext.fillStyle = '#999';
   shadowContext.fillStyle = '#000';
-  for (var i = 0; i < groups.length; ++i) {
-    var group = groups[i],
-      min = group.min, max = group.max;
-    group.width = max.x - min.x + 1;
-    group.height = max.y - min.y + 1;
-    autoboxContext.fillRect(min.x, min.y, group.width, group.height);
+  for (var i = 0; i < shapes.length; ++i) {
+    var shape = shapes[i],
+      min = shape.min, max = shape.max;
+    shape.width = max.x - min.x + 1;
+    shape.height = max.y - min.y + 1;
+    autoboxContext.fillRect(min.x, min.y, shape.width, shape.height);
     for (var y = min.y; y <= max.y; ++y) {
       for (var x = min.x; x <= max.x; ++x) {
         if (grid[y][x].visible) {
