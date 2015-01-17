@@ -27,12 +27,12 @@ var SpriteHelper = {
       pan: true
     }
   },
-  debug: false
+  debug: true
 };
 
 SpriteHelper.message = function () {
   if (SpriteHelper.debug) {
-    console.log(arguments);
+    console.log.apply(console, arguments);
   }
 }
 
@@ -91,10 +91,10 @@ SpriteHelper.paint = function() {
   crop.height = g.clamp(0, focus.y + span.y, image.height) - crop.y;
   target.y = Math.floor((crop.y - focus.y + span.y) * zoom);
   target.height = crop.height * zoom;
-  g.message('focus: '+JSON.stringify(focus));
-  g.message('span: '+JSON.stringify(span));
-  g.message('crop: '+JSON.stringify(crop));
-  g.message('target: '+JSON.stringify(target));
+  //g.message('focus: '+JSON.stringify(focus));
+  //g.message('span: '+JSON.stringify(span));
+  //g.message('crop: '+JSON.stringify(crop));
+  //g.message('target: '+JSON.stringify(target));
 
   // Wipe the slate clean.
   context.clearRect(0, 0, canvas.width, canvas.height);
@@ -156,34 +156,37 @@ SpriteHelper.autoPaint = function () {
       autoboxContext = layer.autobox.canvas.context,
       shadowContext = layer.shadow.canvas.context,
       imageContext = layer.image.canvas.context,
-      grid = new Array(height);
+      grid = new Array(width);
+  for (var x = 0; x < width; ++x) {
+    grid[x] = new Array(height);
+  }
   imageContext.drawImage(g.image, 0, 0);
   var data = imageContext.getImageData(0, 0, width, height).data,
     i = 0;
   for (var y = 0; y < height; ++y) {
-    grid[y] = new Array(width);
     for (var x = 0; x < width; ++x) {
-      var cell = grid[y][x] = {
+      var cell = grid[x][y] = {
         r: data[i], g: data[i+1], b: data[i+2], a: data[i+3]
       };
       cell.visible = (cell.r+cell.g+cell.b != 0);
       i += 4;
     }
   }
-  var shapes = [], dx = [0, 1, 0, -1], dy = [-1, 0, 1, 0];
 
-  // Flood fill to find shapes, i.e., sets of contiguous cells.
+  var blobs = [], dx = [0, 1, 0, -1], dy = [-1, 0, 1, 0];
+
+  // Flood fill to find blobs, i.e., sets of contiguous cells.
   function flood(x, y, id) {
-    grid[y][x].id = id;
-    var shape = shapes[id];
-    shape.min.x = Math.min(shape.min.x, x);
-    shape.min.y = Math.min(shape.min.y, y);
-    shape.max.x = Math.max(shape.max.x, x);
-    shape.max.y = Math.max(shape.max.y, y);
+    grid[x][y].id = id;
+    var blob = blobs[id];
+    blob.min.x = Math.min(blob.min.x, x);
+    blob.min.y = Math.min(blob.min.y, y);
+    blob.max.x = Math.max(blob.max.x, x);
+    blob.max.y = Math.max(blob.max.y, y);
     for (var i = 0; i < 4; ++i) {
       var X = x+dx[i], Y = y+dy[i];
       if (X >= 0 && X < width && Y >= 0 && Y < height) {
-        var cell = grid[Y][X];
+        var cell = grid[X][Y];
         if (cell.visible && cell.id === undefined) {
           flood(X, Y, id);
         }
@@ -192,45 +195,77 @@ SpriteHelper.autoPaint = function () {
   }
   for (var y = 0; y < height; ++y) {
     for (var x = 0; x < width; ++x) {
-      var cell = grid[y][x];
+      var cell = grid[x][y];
       if (cell.visible && cell.id === undefined) {
-        var id = shapes.length;
-        shapes.push({ min: { x: x, y: y }, max: { x: x, y: y } });
+        var id = blobs.length;
+        blobs.push({ min: { x: x, y: y }, max: { x: x, y: y } });
         flood(x, y, id);
       }
     }
   }
 
-  // To make an auto-polygon for a shape:
-  // - find a border pixel
-  // - flood-fill border pixels
-  // - during the flood fill, find the border segments of each border pixel
-  //   (note that a segment may border a hole in the shape)
-  // - somehow find all segments on the outside of the shape
-  // - traverse the segments to make an ordered loop
-  // - merge segments based on some scheme
-  // - calculate a sequence of points based on the segments
-  for (var id = 0; id < shapes.length; ++id) {
-    var shape = shapes[id];
-    // Find a border pixel.
-    var x = shape.min.x, y = shape.min.y;
-    while (grid[y][x].id != id) {
+  // Make a polygon that traces the perimeter of each blob.
+
+  // Cells neighboring a perimeter segment during clockwise traversal.
+  var sides = 
+    [ { left: { r: -1, c: -1 }, right: { r: -1, c: 0 } },
+      { left: { r: -1, c: 0 }, right: { r: 0, c: 0 } },
+      { left: { r: 0, c: 0 }, right: { r: 0, c: -1 } },
+      { left: { r: 0, c: -1 }, right: { r: -1, c: -1 } } ];
+
+  // Helps check the left and right neighbors.
+  function isFilled(x, y) {
+    return x >= 0 && x < width && y >= 0 && y < height && grid[x][y].visible;
+  }
+
+  for (var id = 0; id < blobs.length; ++id) {
+    var blob = blobs[id];
+    // Find the leftmost pixel in the top row.
+    var x = blob.min.x, y = blob.min.y;
+    while (grid[x][y].id != id) {
       ++x;
     }
-    console.log('id = '+id+', border pixel: y = '+y+', x = '+x);
+    g.message('id = '+id+', x = '+x+', y = '+y);
+    // We have found the first corner.
+    var polygon = [{ x: x, y: y }];
+    // We are heading east.
+    var dir = 1, count = 0;
+    // Find the remaining corners.
+    while (true) {
+      // Proceed in the current direction until we hit a corner.
+      x += dx[dir];
+      y += dy[dir];
+      var left = isFilled(x + sides[dir].left.c, y + sides[dir].left.r),
+          right = isFilled(x + sides[dir].right.c, y + sides[dir].right.r);
+      // Check if we're going along the side.
+      if (!left && right) {
+        continue;
+      }
+      // We have reached a corner. Is it the one we departed from?
+      if (x == polygon[0].x && y == polygon[0].y) {
+        break;
+      }
+      polygon.push({ x: x, y: y });
+      if (left) {           // Turn left.
+        dir = (dir+3)%4;
+      } else {              // Turn right.
+        dir = (dir+1)%4;
+      }
+    }
+    g.message('polygon = '+JSON.stringify(polygon));
   }
 
   autoboxContext.fillStyle = '#999';
   shadowContext.fillStyle = '#000';
-  for (var i = 0; i < shapes.length; ++i) {
-    var shape = shapes[i],
-      min = shape.min, max = shape.max;
-    shape.width = max.x - min.x + 1;
-    shape.height = max.y - min.y + 1;
-    autoboxContext.fillRect(min.x, min.y, shape.width, shape.height);
+  for (var i = 0; i < blobs.length; ++i) {
+    var blob = blobs[i],
+      min = blob.min, max = blob.max;
+    blob.width = max.x - min.x + 1;
+    blob.height = max.y - min.y + 1;
+    autoboxContext.fillRect(min.x, min.y, blob.width, blob.height);
     for (var y = min.y; y <= max.y; ++y) {
       for (var x = min.x; x <= max.x; ++x) {
-        if (grid[y][x].visible) {
+        if (grid[x][y].visible) {
           shadowContext.fillRect(x, y, 1, 1);
         }
       }
@@ -252,7 +287,6 @@ SpriteHelper.mouseDownCanvas = function (event) {
     window.clearInterval(pan.release.interval);
   }
   var mouseMove = function (event) {
-    g.message('mouse move: '+event.pageX+', '+event.pageY);
     var x = event.pageX,
         y = event.pageY,
         dx = x - mouseStart.x,
