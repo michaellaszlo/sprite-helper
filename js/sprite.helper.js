@@ -154,8 +154,9 @@ SpriteHelper.autoPaint = function () {
       canvas = g.canvas,
       layer = g.layer,
       autoboxContext = layer.autobox.canvas.context,
-      shadowContext = layer.shadow.canvas.context,
       imageContext = layer.image.canvas.context,
+      shadowContext = layer.shadow.canvas.context,
+      boundaryContext = layer.boundary.canvas.context,
       grid = new Array(width);
   for (var x = 0; x < width; ++x) {
     grid[x] = new Array(height);
@@ -252,7 +253,18 @@ SpriteHelper.autoPaint = function () {
         dir = (dir+1)%4;
       }
     }
-    g.message('polygon = '+JSON.stringify(polygon));
+    //g.message('polygon = '+JSON.stringify(polygon));
+    // Render this polygon to the boundary layer.
+    boundaryContext.lineWidth = 1;
+    boundaryContext.strokeStyle = '#d59460';
+    var a = polygon[polygon.length-1];
+    for (var i = 0; i < polygon.length; ++i) {
+      var b = polygon[i];
+      boundaryContext.moveTo(a.x, a.y);
+      boundaryContext.lineTo(b.x, b.y);
+      a = b;
+    }
+    boundaryContext.stroke();
   }
 
   autoboxContext.fillStyle = '#999';
@@ -391,7 +403,7 @@ SpriteHelper.load = function () {
     panel.style.display = 'block';
     g.layer = {};
     g.layers = [];
-    var names = ['autobox', 'shadow', 'image'];
+    var names = ['autobox', 'image', 'shadow', 'boundary'];
     for (var i = 0; i < names.length; ++i) {
       var name = names[i];
       var layer = g.layer[name] = {
@@ -409,11 +421,10 @@ SpriteHelper.load = function () {
       layer.canvas.context = layer.canvas.getContext('2d');
       g.layers.push(layer);
     }
-    g.layer.autobox.checkbox.checked = true;
+    //g.layer.autobox.checkbox.checked = true;
     g.layer.image.checkbox.checked = true;
-    document.getElementById('showBoxes').disabled = true;
-    document.getElementById('showAutopoly').disabled = true;
-    document.getElementById('showPolygons').disabled = true;
+    g.layer.shadow.checkbox.checked = true;
+    g.layer.boundary.checkbox.checked = true;
     g.reset();
     g.autoPaint();
     resize();
