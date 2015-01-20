@@ -27,7 +27,7 @@ var SpriteHelper = {
       pan: true
     }
   },
-  debug: true
+  debug: false
 };
 
 SpriteHelper.message = function () {
@@ -116,9 +116,16 @@ SpriteHelper.paint = function() {
   for (var i = 0; i < g.layers.length; ++i) {
     var layer = g.layers[i];
     if (layer.checkbox.checked) {
-      context.drawImage(layer.canvas,
-          crop.x, crop.y, crop.width, crop.height,
-          target.x, target.y, target.width, target.height);
+      if (layer == g.layer.boundary) {
+        console.log('boundary layer');
+        context.drawImage(layer.canvas,
+            4*crop.x, 4*crop.y, 4*crop.width, 4*crop.height,
+            target.x, target.y, target.width, target.height);
+      } else {
+        context.drawImage(layer.canvas,
+            crop.x, crop.y, crop.width, crop.height,
+            target.x, target.y, target.width, target.height);
+      }
     }
   }
 };
@@ -260,8 +267,8 @@ SpriteHelper.autoPaint = function () {
     var a = polygon[polygon.length-1];
     for (var i = 0; i < polygon.length; ++i) {
       var b = polygon[i];
-      boundaryContext.moveTo(a.x, a.y);
-      boundaryContext.lineTo(b.x, b.y);
+      boundaryContext.moveTo(4*a.x, 4*a.y);
+      boundaryContext.lineTo(4*b.x, 4*b.y);
       a = b;
     }
     boundaryContext.stroke();
@@ -417,6 +424,10 @@ SpriteHelper.load = function () {
       };
       layer.canvas.width = g.image.width;
       layer.canvas.height = g.image.height;
+      if (name == 'boundary') {
+        layer.canvas.width *= 4;
+        layer.canvas.height *= 4;
+      }
       layer.canvas.style.display = 'none';
       layer.canvas.context = layer.canvas.getContext('2d');
       g.layers.push(layer);
