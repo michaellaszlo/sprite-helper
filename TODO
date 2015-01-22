@@ -18,35 +18,39 @@
 
 + display control panel at top
 
++ make controls unselectable
+
+- calculate left and right polygons (outside and inside)
+
 - polygons
-  - clarify the concept
-  - define the relationship between polygons and boxes
-  - generate zero-threshold polygons
+  + clarify the concept
+  + define the relationship between polygons and boxes
+  + generate zero-threshold polygons
   - add threshold options
 
 - layer selection
   + checkboxes
-  - activate checkboxes
+  + activate checkboxes
+  - replace checkboxes with graphical elements
   - add options
     - colors
     - transparency?
     - order?
-  - replace checkboxes with graphical elements
 
 - layer contents
-  + autobox
-  - boxes (user-selected)
-  + shadow (zero threshold)
+  + boxes
   + image
-  - autopoly
-  - polygons (user-selected)
+  + shadow
+  + boundary
+  - your polygons
 
-- write an iterative version of flood-fill for autobox generation
-- instead of painting to shadowContext, make and copy image data?
+- replace recursive pixel flooding with iterative versions
+- alternative way to render shadowContext: make imageData and write directly
 
-- make controls unselectable
-
-- pixel inspector: view color in rgba and hex
+- pixel inspector
+  - rgba
+  - hex
+  - coordinates
 
 - manually draw polygon
   - add point

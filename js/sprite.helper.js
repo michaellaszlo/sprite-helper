@@ -117,7 +117,6 @@ SpriteHelper.paint = function() {
     var layer = g.layers[i];
     if (layer.checkbox.checked) {
       if (layer == g.layer.boundary) {
-        console.log('boundary layer');
         context.drawImage(layer.canvas,
             4*crop.x, 4*crop.y, 4*crop.width, 4*crop.height,
             target.x, target.y, target.width, target.height);
@@ -265,9 +264,9 @@ SpriteHelper.autoPaint = function () {
     boundaryContext.lineWidth = 1;
     boundaryContext.strokeStyle = '#d59460';
     var a = polygon[polygon.length-1];
+    boundaryContext.moveTo(4*a.x, 4*a.y);
     for (var i = 0; i < polygon.length; ++i) {
       var b = polygon[i];
-      boundaryContext.moveTo(4*a.x, 4*a.y);
       boundaryContext.lineTo(4*b.x, 4*b.y);
       a = b;
     }
@@ -389,6 +388,18 @@ SpriteHelper.load = function () {
 
   var layout = g.layout,
       panelSize = layout.panel.content + layout.panel.border;
+
+  // Derived from:
+  //   http://evanhahn.com/how-to-disable-copy-paste-on-your-website/
+  function makeUnselectable() {
+    // The CSS properties cover Chrome, Firefox, Safari, IE 10, and new Opera.
+    $(this).addClass('unselectable');
+    // This JavaScript is for IE 4 through IE 9.
+    $(this).on('dragstart, selectstart', function (event) {
+      event.preventDefault();
+    });
+  }
+  $('#controlPanel').each(makeUnselectable);
 
   var resize = function () {
     canvas.style.top = panelSize + 'px';
