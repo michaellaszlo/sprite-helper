@@ -117,9 +117,7 @@ SpriteHelper.paint = function() {
     var layer = g.layers[i];
     if (layer.checkbox.checked) {
       if (layer == g.layer.boundary) {
-        context.drawImage(layer.canvas,
-            4*crop.x, 4*crop.y, 4*crop.width, 4*crop.height,
-            target.x, target.y, target.width, target.height);
+        // xxx
       } else {
         context.drawImage(layer.canvas,
             crop.x, crop.y, crop.width, crop.height,
@@ -389,8 +387,7 @@ SpriteHelper.load = function () {
   var layout = g.layout,
       panelSize = layout.panel.content + layout.panel.border;
 
-  // Derived from:
-  //   http://evanhahn.com/how-to-disable-copy-paste-on-your-website/
+  // See http://evanhahn.com/how-to-disable-copy-paste-on-your-website/
   function makeUnselectable() {
     // The CSS properties cover Chrome, Firefox, Safari, IE 10, and new Opera.
     $(this).addClass('unselectable');
@@ -430,15 +427,17 @@ SpriteHelper.load = function () {
             'show' + name[0].toUpperCase() + name.substring(1)),
         canvas: document.createElement('canvas')
       };
+      // If a checkbox state is modified, we wipe the slate and render
+      //  all visible layers to the main canvas. In some respects it would
+      //  be more efficient to have a separate rendering canvas for each
+      //  layer, and to modify the visibility of a canvas when the
+      //  corresponding checkbox is modified. However, there is no
+      //  perceptible rendering delay with the current approach.
       layer.checkbox.onclick = function () {
         g.paint();
       };
       layer.canvas.width = g.image.width;
       layer.canvas.height = g.image.height;
-      if (name == 'boundary') {
-        layer.canvas.width *= 4;
-        layer.canvas.height *= 4;
-      }
       layer.canvas.style.display = 'none';
       layer.canvas.context = layer.canvas.getContext('2d');
       g.layers.push(layer);
