@@ -116,15 +116,22 @@ SpriteHelper.paint = function() {
   for (var i = 0; i < g.layers.length; ++i) {
     var layer = g.layers[i];
     if (layer.checkbox.checked) {
-      if (layer == g.layer.boundary) {
-        // xxx
-      } else {
+      if (layer != g.layer.boundary) {  // Deal with the boundary separately.
         context.drawImage(layer.canvas,
             crop.x, crop.y, crop.width, crop.height,
             target.x, target.y, target.width, target.height);
       }
     }
   }
+  // Now we're going to deal with the boundary.
+  var boundaryCanvas = g.layer['boundary'],
+      boundaryContext = boundaryCanvas.context;
+  // Resize the boundary layer to fit the main canvas.
+  boundaryCanvas.width = canvas.width;
+  boundaryCanvas.height = canvas.height;
+  // Next, we have to iterate over the boundary segments and draw the
+  //  ones that have at least one endpoint within the viewing frame.
+
 };
 
 SpriteHelper.zoomBy = function (delta) {
@@ -160,7 +167,6 @@ SpriteHelper.autoPaint = function () {
       autoboxContext = layer.autobox.canvas.context,
       imageContext = layer.image.canvas.context,
       shadowContext = layer.shadow.canvas.context,
-      boundaryContext = layer.boundary.canvas.context,
       grid = new Array(width);
   for (var x = 0; x < width; ++x) {
     grid[x] = new Array(height);
@@ -209,7 +215,7 @@ SpriteHelper.autoPaint = function () {
     }
   }
 
-  // Make a polygon that traces the perimeter of each blob.
+  // Make a polygon that traces the perimeter of the blob.
 
   // Cells neighboring a perimeter segment during clockwise traversal.
   var sides = 
@@ -242,11 +248,15 @@ SpriteHelper.autoPaint = function () {
       y += dy[dir];
       var left = isFilled(x + sides[dir].left.c, y + sides[dir].left.r),
           right = isFilled(x + sides[dir].right.c, y + sides[dir].right.r);
-      // Check if we're going along the side.
+      // Check if we're going along the side. If not, we're at a corner.
       if (!left && right) {
         continue;
       }
-      // We have reached a corner. Is it the one we departed from?
+
+      // Calculate the equation of the line passing through this point
+      //  and the previous point.
+
+      // Is this the corner we departed from?
       if (x == polygon[0].x && y == polygon[0].y) {
         break;
       }
@@ -258,17 +268,6 @@ SpriteHelper.autoPaint = function () {
       }
     }
     //g.message('polygon = '+JSON.stringify(polygon));
-    // Render this polygon to the boundary layer.
-    boundaryContext.lineWidth = 1;
-    boundaryContext.strokeStyle = '#d59460';
-    var a = polygon[polygon.length-1];
-    boundaryContext.moveTo(4*a.x, 4*a.y);
-    for (var i = 0; i < polygon.length; ++i) {
-      var b = polygon[i];
-      boundaryContext.lineTo(4*b.x, 4*b.y);
-      a = b;
-    }
-    boundaryContext.stroke();
   }
 
   autoboxContext.fillStyle = '#999';
@@ -427,9 +426,9 @@ SpriteHelper.load = function () {
             'show' + name[0].toUpperCase() + name.substring(1)),
         canvas: document.createElement('canvas')
       };
-      // If a checkbox state is modified, we wipe the slate and render
-      //  all visible layers to the main canvas. In some respects it would
-      //  be more efficient to have a separate rendering canvas for each
+      // If a checkbox state is modified, we clear the main canvas and
+      //  render all visible layers. In some respects it would be
+      //  more efficient to have a separate rendering canvas for each
       //  layer, and to modify the visibility of a canvas when the
       //  corresponding checkbox is modified. However, there is no
       //  perceptible rendering delay with the current approach.
