@@ -253,8 +253,10 @@ SpriteHelper.autoPaint = function () {
         continue;
       }
 
-      // Calculate the equation of the line passing through this point
-      //  and the previous point.
+      // Calculate the angle of the vector from the previous corner to
+      //  the current corner.
+      var previous = polygon[polygon.length-1];
+      previous.angle = g.calculateAngle(previous.x, previous.y, x, y);
 
       // Is this the corner we departed from?
       if (x == polygon[0].x && y == polygon[0].y) {
@@ -267,7 +269,7 @@ SpriteHelper.autoPaint = function () {
         dir = (dir+1)%4;
       }
     }
-    //g.message('polygon = '+JSON.stringify(polygon));
+    console.log('polygon = '+JSON.stringify(polygon));
   }
 
   autoboxContext.fillStyle = '#999';
@@ -286,6 +288,12 @@ SpriteHelper.autoPaint = function () {
       }
     }
   }
+};
+
+SpriteHelper.calculateAngle = function (x1, y1, x2, y2) {
+  var x = x2-x1, y = y2-y1,
+      r = Math.sqrt(x*x + y*y);
+  return y >= 0 ? Math.acos(x/r) : 2*Math.PI - Math.acos(x/r);
 };
 
 // Click and drag to pan the canvas.

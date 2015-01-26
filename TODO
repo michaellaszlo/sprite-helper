@@ -20,7 +20,7 @@
 
 + make controls unselectable
 
-- calculate left and right polygons (outside and inside)
+- calculate concentric polygons (outside and inside)
 
 - polygons
   + clarify the concept
