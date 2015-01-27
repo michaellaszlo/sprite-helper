@@ -127,13 +127,14 @@ SpriteHelper.paint = function() {
     }
   }
   // Prepare to render the boundary.
-  var boundaryCanvas = g.layer['boundary'],
+  var boundaryLayer = g.layer['boundary'],
+      boundaryCanvas = boundaryLayer.canvas,
       boundaryContext = boundaryCanvas.context,
       width = canvas.width, height = canvas.height;
   // Resize the boundary layer to fit the main canvas.
   boundaryCanvas.width = width;
   boundaryCanvas.height = height;
-  boundaryCanvas.clearRect(0, 0, width, height);
+  boundaryContext.clearRect(0, 0, width, height);
   // Calculate boundary segments.
   var polygon = g.polygon,
       previous = polygon[polygon.length-1];
@@ -142,14 +143,28 @@ SpriteHelper.paint = function() {
     var current = polygon[i],
       a = previous.angle,
       b = current.angle,
-      turn = b-a;
-    if (turn > Math.PI) {
-      turn -= 2*Math.PI;
-    }
-    var outward = a - Math.PI/2 + turn/2,  // outward is < a and maybe < 0
-        project = g.boundary.gap / Math.cos(outward);
+      turn = b-a,
+      alpha = (Math.PI - turn)/2,
+      angle = a - alpha,
+      distance = g.boundary.gap / Math.sin(alpha),
+      dx = distance * Math.cos(angle),
+      dy = distance * Math.sin(angle);
+    current.outX = current.x + dx,
+    current.outY = current.y + dy;
+    previous = current;
   }
   // Option 1: Draw all boundary segments.
+  boundaryContext.fillStyle = '#000';
+  boundaryContext.beginPath();
+  previous = polygon[polygon.length-1];
+  boundaryContext.moveTo(previous.outX, previous.outY);
+  for (var i = 0; i < polygon.length; i++) {
+    boundaryContext.lineTo(polygon[i].outX, polygon[i].outY);
+    console.log(polygon[i].outX, polygon[i].outY);
+  }
+  boundaryContext.closePath();
+  boundaryContext.stroke();
+  console.log(boundaryCanvas);
   // Option 2: iterate over the boundary segments and draw the
   //  ones that have at least one endpoint within the viewing frame.
 };
@@ -465,7 +480,6 @@ SpriteHelper.load = function () {
       };
       layer.canvas.width = g.image.width;
       layer.canvas.height = g.image.height;
-      layer.canvas.style.display = 'none';
       layer.canvas.context = layer.canvas.getContext('2d');
       g.layers.push(layer);
     }
