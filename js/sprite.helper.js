@@ -27,6 +27,9 @@ var SpriteHelper = {
       pan: true
     }
   },
+  boundary: {
+    gap: 0.5
+  },
   debug: false
 };
 
@@ -123,15 +126,32 @@ SpriteHelper.paint = function() {
       }
     }
   }
-  // Now we're going to deal with the boundary.
+  // Prepare to render the boundary.
   var boundaryCanvas = g.layer['boundary'],
-      boundaryContext = boundaryCanvas.context;
+      boundaryContext = boundaryCanvas.context,
+      width = canvas.width, height = canvas.height;
   // Resize the boundary layer to fit the main canvas.
-  boundaryCanvas.width = canvas.width;
-  boundaryCanvas.height = canvas.height;
-  // Next, we have to iterate over the boundary segments and draw the
+  boundaryCanvas.width = width;
+  boundaryCanvas.height = height;
+  boundaryCanvas.clearRect(0, 0, width, height);
+  // Calculate boundary segments.
+  var polygon = g.polygon,
+      previous = polygon[polygon.length-1];
+  for (var i = 0; i < polygon.length; i++) {
+    // TODO: calculate turn and outward during autopaint.
+    var current = polygon[i],
+      a = previous.angle,
+      b = current.angle,
+      turn = b-a;
+    if (turn > Math.PI) {
+      turn -= 2*Math.PI;
+    }
+    var outward = a - Math.PI/2 + turn/2,  // outward is < a and maybe < 0
+        project = g.boundary.gap / Math.cos(outward);
+  }
+  // Option 1: Draw all boundary segments.
+  // Option 2: iterate over the boundary segments and draw the
   //  ones that have at least one endpoint within the viewing frame.
-
 };
 
 SpriteHelper.zoomBy = function (delta) {
@@ -238,7 +258,7 @@ SpriteHelper.autoPaint = function () {
     }
     g.message('id = '+id+', x = '+x+', y = '+y);
     // We have found the first corner.
-    var polygon = [{ x: x, y: y }];
+    var polygon = g.polygon = [{ x: x, y: y }];
     // We are heading east.
     var dir = 1, count = 0;
     // Find the remaining corners.
@@ -269,7 +289,7 @@ SpriteHelper.autoPaint = function () {
         dir = (dir+1)%4;
       }
     }
-    console.log('polygon = '+JSON.stringify(polygon));
+    //console.log('polygon = '+JSON.stringify(polygon));
   }
 
   autoboxContext.fillStyle = '#999';
