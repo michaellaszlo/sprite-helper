@@ -116,22 +116,20 @@ SpriteHelper.paint = function() {
 
   // Scale the crop rectangle back to the native image and copy it to
   //   the target rectangle on the canvas.
-  for (var i = 0; i < g.layers.length; ++i) {
-    var layer = g.layers[i];
-    if (layer.checkbox.checked) {
-      if (layer != g.layer.boundary) {  // Deal with the boundary separately.
-        context.drawImage(layer.canvas,
-            crop.x, crop.y, crop.width, crop.height,
-            target.x, target.y, target.width, target.height);
-      }
+  for (var i = 0; i < g.sources.length; ++i) {
+    var source = g.sources[i];
+    if (source.checkbox.checked) {
+      context.drawImage(source.canvas,
+          crop.x, crop.y, crop.width, crop.height,
+          target.x, target.y, target.width, target.height);
     }
   }
   // Prepare to render the boundary.
-  var boundaryLayer = g.layer['boundary'],
-      boundaryCanvas = boundaryLayer.canvas,
+  var boundaryTarget = g.source['boundary'],
+      boundaryCanvas = boundaryTarget.canvas,
       boundaryContext = boundaryCanvas.context,
       width = canvas.width, height = canvas.height;
-  // Resize the boundary layer to fit the main canvas.
+  // Resize the boundary source to fit the main canvas.
   boundaryCanvas.width = width;
   boundaryCanvas.height = height;
   boundaryContext.clearRect(0, 0, width, height);
@@ -154,17 +152,15 @@ SpriteHelper.paint = function() {
     previous = current;
   }
   // Option 1: Draw all boundary segments.
-  boundaryContext.fillStyle = '#000';
+  boundaryContext.fillStyle = 'blue';
   boundaryContext.beginPath();
   previous = polygon[polygon.length-1];
   boundaryContext.moveTo(previous.outX, previous.outY);
   for (var i = 0; i < polygon.length; i++) {
     boundaryContext.lineTo(polygon[i].outX, polygon[i].outY);
-    console.log(polygon[i].outX, polygon[i].outY);
   }
   boundaryContext.closePath();
   boundaryContext.stroke();
-  console.log(boundaryCanvas);
   // Option 2: iterate over the boundary segments and draw the
   //  ones that have at least one endpoint within the viewing frame.
 };
@@ -198,10 +194,10 @@ SpriteHelper.autoPaint = function () {
       width = image.width,
       height = image.height,
       canvas = g.canvas,
-      layer = g.layer,
-      autoboxContext = layer.autobox.canvas.context,
-      imageContext = layer.image.canvas.context,
-      shadowContext = layer.shadow.canvas.context,
+      source = g.source,
+      autoboxContext = source.autobox.canvas.context,
+      imageContext = source.image.canvas.context,
+      shadowContext = source.shadow.canvas.context,
       grid = new Array(width);
   for (var x = 0; x < width; ++x) {
     grid[x] = new Array(height);
@@ -458,35 +454,35 @@ SpriteHelper.load = function () {
   g.image.onload = function () {
     canvas.style.display = 'block';
     panel.style.display = 'block';
-    g.layer = {};
-    g.layers = [];
+    g.source = {};
+    g.sources = [];
     var names = ['autobox', 'image', 'shadow', 'boundary'];
     for (var i = 0; i < names.length; ++i) {
       var name = names[i];
-      var layer = g.layer[name] = {
+      var source = g.source[name] = {
         name: name,
         checkbox: document.getElementById(
             'show' + name[0].toUpperCase() + name.substring(1)),
         canvas: document.createElement('canvas')
       };
       // If a checkbox state is modified, we clear the main canvas and
-      //  render all visible layers. In some respects it would be
+      //  render all visible sources. In some respects it would be
       //  more efficient to have a separate rendering canvas for each
-      //  layer, and to modify the visibility of a canvas when the
+      //  source, and to modify the visibility of a canvas when the
       //  corresponding checkbox is modified. However, there is no
       //  perceptible rendering delay with the current approach.
-      layer.checkbox.onclick = function () {
+      source.checkbox.onclick = function () {
         g.paint();
       };
-      layer.canvas.width = g.image.width;
-      layer.canvas.height = g.image.height;
-      layer.canvas.context = layer.canvas.getContext('2d');
-      g.layers.push(layer);
+      source.canvas.width = g.image.width;
+      source.canvas.height = g.image.height;
+      source.canvas.context = source.canvas.getContext('2d');
+      g.sources.push(source);
     }
-    //g.layer.autobox.checkbox.checked = true;
-    g.layer.image.checkbox.checked = true;
-    g.layer.shadow.checkbox.checked = true;
-    g.layer.boundary.checkbox.checked = true;
+    //g.source.autobox.checkbox.checked = true;
+    g.source.image.checkbox.checked = true;
+    g.source.shadow.checkbox.checked = true;
+    g.source.boundary.checkbox.checked = true;
     g.reset();
     g.autoPaint();
     resize();
