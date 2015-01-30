@@ -125,7 +125,6 @@ SpriteHelper.paint = function() {
   boundaryContext.clearRect(0, 0, width, height);
   boundaryContext.strokeStyle = '#774d2b';
   var polygons = g.polygons;
-  console.log(polygons.length+' polygons');
   for (var i = 0; i < polygons.length; i++) {
     // Calculate boundary segments.
     var polygon = polygons[i],
@@ -426,8 +425,11 @@ SpriteHelper.mouseDownCanvas = function (event) {
 SpriteHelper.load = function () {
   var g = SpriteHelper,
       panel = g.panel = document.getElementById('controlPanel'),
-      canvas = g.canvas = document.getElementById('mainCanvas');
+      wrapper = document.getElementById('wrapper'),
+      canvas = g.canvas = document.createElement('canvas');
+  canvas.id = 'mainCanvas';
   canvas.context = canvas.getContext('2d');
+  wrapper.appendChild(canvas);
 
   var layout = g.layout,
       panelSize = layout.panel.content + layout.panel.border;
