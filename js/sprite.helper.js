@@ -114,6 +114,50 @@ SpriteHelper.paint = function() {
   context.msImageSmoothingEnabled = false;
   context.imageSmoothingEnabled = false;
 
+  // Prepare to render the boundary.
+  var boundaryTarget = g.source['boundary'],
+      boundaryCanvas = boundaryTarget.canvas,
+      boundaryContext = boundaryCanvas.context,
+      width = canvas.width, height = canvas.height;
+  // Resize the boundary source to fit the main canvas.
+  boundaryCanvas.width = width;
+  boundaryCanvas.height = height;
+  boundaryContext.clearRect(0, 0, width, height);
+  boundaryContext.strokeStyle = '#774d2b';
+  var polygons = g.polygons;
+  console.log(polygons.length+' polygons');
+  for (var i = 0; i < polygons.length; i++) {
+    // Calculate boundary segments.
+    var polygon = polygons[i],
+        previous = polygon[polygon.length-1];
+    for (var j = 0; j < polygon.length; j++) {
+      // TODO: calculate turn and outward during autopaint.
+      var current = polygon[j],
+        a = previous.angle,
+        b = current.angle,
+        turn = b-a,
+        alpha = (Math.PI - turn)/2,
+        angle = a - alpha,
+        distance = g.boundary.gap / Math.sin(alpha),
+        dx = distance * Math.cos(angle),
+        dy = distance * Math.sin(angle);
+      current.outX = current.x + dx,
+      current.outY = current.y + dy;
+      previous = current;
+    }
+    // Option 1: Draw all boundary segments.
+    boundaryContext.beginPath();
+    previous = polygon[polygon.length-1];
+    boundaryContext.moveTo(previous.outX, previous.outY);
+    for (var j = 0; j < polygon.length; j++) {
+      boundaryContext.lineTo(polygon[j].outX, polygon[j].outY);
+    }
+    boundaryContext.closePath();
+    boundaryContext.stroke();
+    // Option 2: iterate over the boundary segments and draw the
+    //  ones that have at least one endpoint within the viewing frame.
+  }
+
   // Scale the crop rectangle back to the native image and copy it to
   //   the target rectangle on the canvas.
   for (var i = 0; i < g.sources.length; ++i) {
@@ -124,45 +168,6 @@ SpriteHelper.paint = function() {
           target.x, target.y, target.width, target.height);
     }
   }
-  // Prepare to render the boundary.
-  var boundaryTarget = g.source['boundary'],
-      boundaryCanvas = boundaryTarget.canvas,
-      boundaryContext = boundaryCanvas.context,
-      width = canvas.width, height = canvas.height;
-  // Resize the boundary source to fit the main canvas.
-  boundaryCanvas.width = width;
-  boundaryCanvas.height = height;
-  boundaryContext.clearRect(0, 0, width, height);
-  // Calculate boundary segments.
-  var polygon = g.polygon,
-      previous = polygon[polygon.length-1];
-  for (var i = 0; i < polygon.length; i++) {
-    // TODO: calculate turn and outward during autopaint.
-    var current = polygon[i],
-      a = previous.angle,
-      b = current.angle,
-      turn = b-a,
-      alpha = (Math.PI - turn)/2,
-      angle = a - alpha,
-      distance = g.boundary.gap / Math.sin(alpha),
-      dx = distance * Math.cos(angle),
-      dy = distance * Math.sin(angle);
-    current.outX = current.x + dx,
-    current.outY = current.y + dy;
-    previous = current;
-  }
-  // Option 1: Draw all boundary segments.
-  boundaryContext.fillStyle = 'blue';
-  boundaryContext.beginPath();
-  previous = polygon[polygon.length-1];
-  boundaryContext.moveTo(previous.outX, previous.outY);
-  for (var i = 0; i < polygon.length; i++) {
-    boundaryContext.lineTo(polygon[i].outX, polygon[i].outY);
-  }
-  boundaryContext.closePath();
-  boundaryContext.stroke();
-  // Option 2: iterate over the boundary segments and draw the
-  //  ones that have at least one endpoint within the viewing frame.
 };
 
 SpriteHelper.zoomBy = function (delta) {
@@ -246,7 +251,8 @@ SpriteHelper.autoPaint = function () {
     }
   }
 
-  // Make a polygon that traces the perimeter of the blob.
+  // For each blob, make a polygon that traces its perimeter.
+  var polygons = g.polygons = [];
 
   // Cells neighboring a perimeter segment during clockwise traversal.
   var sides = 
@@ -269,7 +275,7 @@ SpriteHelper.autoPaint = function () {
     }
     g.message('id = '+id+', x = '+x+', y = '+y);
     // We have found the first corner.
-    var polygon = g.polygon = [{ x: x, y: y }];
+    var polygon = [{ x: x, y: y }];
     // We are heading east.
     var dir = 1, count = 0;
     // Find the remaining corners.
@@ -301,6 +307,7 @@ SpriteHelper.autoPaint = function () {
       }
     }
     //console.log('polygon = '+JSON.stringify(polygon));
+    polygons.push(polygon);
   }
 
   autoboxContext.fillStyle = '#999';
@@ -481,7 +488,7 @@ SpriteHelper.load = function () {
     }
     //g.source.autobox.checkbox.checked = true;
     g.source.image.checkbox.checked = true;
-    g.source.shadow.checkbox.checked = true;
+    //g.source.shadow.checkbox.checked = true;
     g.source.boundary.checkbox.checked = true;
     g.reset();
     g.autoPaint();
