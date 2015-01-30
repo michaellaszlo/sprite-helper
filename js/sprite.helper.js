@@ -58,7 +58,7 @@ SpriteHelper.clamp = function (low, x, high) {
  
 SpriteHelper.paint = function() {
   var g = SpriteHelper,
-      canvas = g.canvas,
+      canvas = g.canvas.main,
       context = canvas.context,
       image = g.image,
       zoom = g.zoom,
@@ -115,8 +115,7 @@ SpriteHelper.paint = function() {
   context.imageSmoothingEnabled = false;
 
   // Prepare to render the boundary.
-  var boundaryTarget = g.source['boundary'],
-      boundaryCanvas = boundaryTarget.canvas,
+  var boundaryCanvas = g.canvas.boundary,
       boundaryContext = boundaryCanvas.context,
       width = canvas.width, height = canvas.height;
   // Resize the boundary source to fit the main canvas.
@@ -197,7 +196,7 @@ SpriteHelper.autoPaint = function () {
       image = g.image,
       width = image.width,
       height = image.height,
-      canvas = g.canvas,
+      canvas = g.canvas.main,
       source = g.source,
       autoboxContext = source.autobox.canvas.context,
       imageContext = source.image.canvas.context,
@@ -305,7 +304,6 @@ SpriteHelper.autoPaint = function () {
         dir = (dir+1)%4;
       }
     }
-    //console.log('polygon = '+JSON.stringify(polygon));
     polygons.push(polygon);
   }
 
@@ -336,7 +334,7 @@ SpriteHelper.calculateAngle = function (x1, y1, x2, y2) {
 // Click and drag to pan the canvas.
 SpriteHelper.mouseDownCanvas = function (event) {
   var g = SpriteHelper,
-      canvas = g.canvas,
+      canvas = g.canvas.main,
       focus = g.focus,
       pan = g.option.pan,
       focusStart = { x: focus.x, y: focus.y },
@@ -361,7 +359,7 @@ SpriteHelper.mouseDownCanvas = function (event) {
     }
     if (pan.reposition) {
       var target = g.target,
-        canvas = g.canvas;
+        canvas = g.canvas.main;
       if (target.x == 0 && target.width == 0 && dx < 0) {
         target.x = -g.target.width;
         dx = 0;
@@ -425,11 +423,22 @@ SpriteHelper.mouseDownCanvas = function (event) {
 SpriteHelper.load = function () {
   var g = SpriteHelper,
       panel = g.panel = document.getElementById('controlPanel'),
-      wrapper = document.getElementById('wrapper'),
-      canvas = g.canvas = document.createElement('canvas');
-  canvas.id = 'mainCanvas';
-  canvas.context = canvas.getContext('2d');
-  wrapper.appendChild(canvas);
+      wrapper = document.getElementById('wrapper');
+
+  // Make target canvases.
+  var names = ['main', 'boundary', 'control'];
+  g.canvas = {};
+  g.canvases = [];
+  for (var i = 0; i < names.length; ++i) {
+    var name = names[i];
+    var canvas = document.createElement('canvas');
+    canvas.context = canvas.getContext('2d');
+    $(canvas).addClass('target');
+    canvas.id = name+'Canvas';
+    g.canvas[name] = canvas;
+    g.canvases.push(canvas);
+    wrapper.appendChild(canvas);
+  }
 
   var layout = g.layout,
       panelSize = layout.panel.content + layout.panel.border;
@@ -446,26 +455,32 @@ SpriteHelper.load = function () {
   $('#controlPanel').each(makeUnselectable);
 
   var resize = function () {
-    canvas.style.top = panelSize + 'px';
-    canvas.height = $(window).height() - panelSize;
-    canvas.width = $(window).width();
-    panel.style.width = canvas.width + 'px';
-    panel.style.height = layout.panel.content + 'px';
-    panel.style.borderBottom = layout.panel.border + 'px solid ' +
-        layout.panel.borderColor;
-    canvas.width = $(window).width();
-    canvas.height = $(window).height() - panelSize;
+    for (var i = 0; i < g.canvases.length; ++i) {
+      var canvas = g.canvases[i];
+      canvas.style.top = panelSize + 'px';
+      canvas.height = $(window).height() - panelSize;
+      canvas.width = $(window).width();
+      panel.style.width = canvas.width + 'px';
+      panel.style.height = layout.panel.content + 'px';
+      panel.style.borderBottom = layout.panel.border + 'px solid ' +
+          layout.panel.borderColor;
+      canvas.width = $(window).width();
+      canvas.height = $(window).height() - panelSize;
+    }
     g.paint();
   };
 
   g.image = new Image();
   g.image.src = g.imageSource;
   g.image.onload = function () {
-    canvas.style.display = 'block';
+    for (var i = 0; i < g.canvases.length; ++i) {
+      var canvas = g.canvases[i];
+      canvas.style.display = 'block';
+    }
     panel.style.display = 'block';
     g.source = {};
     g.sources = [];
-    var names = ['autobox', 'image', 'shadow', 'boundary'];
+    var names = ['autobox', 'image', 'shadow'];
     for (var i = 0; i < names.length; ++i) {
       var name = names[i];
       var source = g.source[name] = {
@@ -474,12 +489,6 @@ SpriteHelper.load = function () {
             'show' + name[0].toUpperCase() + name.substring(1)),
         canvas: document.createElement('canvas')
       };
-      // If a checkbox state is modified, we clear the main canvas and
-      //  render all visible sources. In some respects it would be
-      //  more efficient to have a separate rendering canvas for each
-      //  source, and to modify the visibility of a canvas when the
-      //  corresponding checkbox is modified. However, there is no
-      //  perceptible rendering delay with the current approach.
       source.checkbox.onclick = function () {
         g.paint();
       };
@@ -488,15 +497,23 @@ SpriteHelper.load = function () {
       source.canvas.context = source.canvas.getContext('2d');
       g.sources.push(source);
     }
-    //g.source.autobox.checkbox.checked = true;
+
+    // If a checkbox state is modified, we clear the main canvas and
+    //  render all visible sources. In some respects it would be
+    //  more efficient to have a separate rendering canvas for each
+    //  source, and to modify the visibility of a canvas when the
+    //  corresponding checkbox is modified. However, there is no
+    //  perceptible rendering delay with the current approach.
+    g.canvas.boundary.checkbox = document.getElementById('showBoundary');
+
     g.source.image.checkbox.checked = true;
-    //g.source.shadow.checkbox.checked = true;
-    g.source.boundary.checkbox.checked = true;
+    g.canvas.boundary.checkbox.checked = true;
+
     g.reset();
     g.autoPaint();
     resize();
     $(window).on('resize', resize);
-    $(canvas).mousedown(g.mouseDownCanvas);
+    $(g.canvas.control).mousedown(g.mouseDownCanvas);
     $(window).keydown(function (event) {
       var keyDownHandlers = {
         68: g.zoomOut,

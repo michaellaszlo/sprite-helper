@@ -20,10 +20,13 @@ body {
 #wrapper {
 }
 
-#mainCanvas {
+canvas.target {
   position: fixed;
-  background: url(../i/blank.3.png);
   display: none;
+}
+
+#mainCanvas {
+  background: url(../i/blank.3.png);
 }
 
 #controlPanel {
