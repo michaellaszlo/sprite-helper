@@ -114,48 +114,6 @@ SpriteHelper.paint = function() {
   context.msImageSmoothingEnabled = false;
   context.imageSmoothingEnabled = false;
 
-  // Prepare to render the boundary.
-  var boundaryCanvas = g.canvas.boundary,
-      boundaryContext = boundaryCanvas.context,
-      width = canvas.width, height = canvas.height;
-  // Resize the boundary source to fit the main canvas.
-  boundaryCanvas.width = width;
-  boundaryCanvas.height = height;
-  boundaryContext.clearRect(0, 0, width, height);
-  boundaryContext.strokeStyle = '#774d2b';
-  var polygons = g.polygons;
-  for (var i = 0; i < polygons.length; i++) {
-    // Calculate boundary segments.
-    var polygon = polygons[i],
-        previous = polygon[polygon.length-1];
-    for (var j = 0; j < polygon.length; j++) {
-      // TODO: calculate turn and outward during autopaint.
-      var current = polygon[j],
-        a = previous.angle,
-        b = current.angle,
-        turn = b-a,
-        alpha = (Math.PI - turn)/2,
-        angle = a - alpha,
-        distance = g.boundary.gap / Math.sin(alpha),
-        dx = distance * Math.cos(angle),
-        dy = distance * Math.sin(angle);
-      current.outX = current.x + dx,
-      current.outY = current.y + dy;
-      previous = current;
-    }
-    // Option 1: Draw all boundary segments.
-    boundaryContext.beginPath();
-    previous = polygon[polygon.length-1];
-    boundaryContext.moveTo(previous.outX, previous.outY);
-    for (var j = 0; j < polygon.length; j++) {
-      boundaryContext.lineTo(polygon[j].outX, polygon[j].outY);
-    }
-    boundaryContext.closePath();
-    boundaryContext.stroke();
-    // Option 2: iterate over the boundary segments and draw the
-    //  ones that have at least one endpoint within the viewing frame.
-  }
-
   // Scale the crop rectangle back to the native image and copy it to
   //   the target rectangle on the canvas.
   for (var i = 0; i < g.sources.length; ++i) {
@@ -165,6 +123,57 @@ SpriteHelper.paint = function() {
           crop.x, crop.y, crop.width, crop.height,
           target.x, target.y, target.width, target.height);
     }
+  }
+
+  // Prepare to render the boundary.
+  var boundaryCanvas = g.canvas.boundary,
+      boundaryContext = boundaryCanvas.context,
+      width = canvas.width, height = canvas.height;
+  // Resize the boundary source to fit the main canvas.
+  boundaryCanvas.width = width;
+  boundaryCanvas.height = height;
+  boundaryContext.clearRect(0, 0, width, height);
+  boundaryContext.strokeStyle = '#774d2b';
+  // TODO: Add a mode in which we vary the line width (and the gap)
+  //  automatically as a function of the zoom.
+  boundaryContext.lineWidth = 1;
+  var polygons = g.polygons;
+  for (var i = 0; i < polygons.length; i++) {
+    // Calculate boundary segments.
+    var polygon = polygons[i],
+        previous = polygon[polygon.length-1];
+    for (var j = 0; j < polygon.length; j++) {
+      // TODO: calculate the boundary angles and distances during autopaint.
+      var current = polygon[j],
+        a = previous.angle,
+        b = current.angle,
+        turn = b-a,
+        alpha = (Math.PI - turn)/2,
+        angle = a - alpha,
+        distance = g.boundary.gap / Math.sin(alpha),
+        dx = distance * Math.cos(angle),
+        dy = distance * Math.sin(angle),
+        x = (current.x - crop.x) * zoom,
+        y = (current.y - crop.y) * zoom;
+      current.outX = x + dx;
+      current.outY = y + dy;
+      previous = current;
+    }
+    // Option 1: Draw all boundary segments.
+    // Option 2: Only draw boundary segments that have at least
+    //  one endpoint within the viewing frame.
+    // At the moment we're going with Option 1.
+    // TODO: Implement Option 2.
+    boundaryContext.beginPath();
+    previous = polygon[polygon.length-1];
+    boundaryContext.moveTo(target.x + previous.outX,
+        target.y + previous.outY);
+    for (var j = 0; j < polygon.length; j++) {
+      boundaryContext.lineTo(target.x + polygon[j].outX,
+          target.y + polygon[j].outY);
+    }
+    boundaryContext.closePath();
+    boundaryContext.stroke();
   }
 };
 
@@ -508,7 +517,7 @@ SpriteHelper.load = function () {
 
     // The boundary is on a target canvas, not a source layer, and
     //  we're dealing with it differently. This is a temporary kludge.
-    //  All checkboxes should be dealt with in the same way.
+    //  TODO: Deal with all checkboxes in the same way.
     var boundaryCanvas = g.canvas.boundary;
     boundaryCanvas.checkbox = document.getElementById('showBoundary');
     boundaryCanvas.checkbox.onclick = function () {
