@@ -504,10 +504,19 @@ SpriteHelper.load = function () {
     //  source, and to modify the visibility of a canvas when the
     //  corresponding checkbox is modified. However, there is no
     //  perceptible rendering delay with the current approach.
-    g.canvas.boundary.checkbox = document.getElementById('showBoundary');
-
     g.source.image.checkbox.checked = true;
-    g.canvas.boundary.checkbox.checked = true;
+
+    // The boundary is on a target canvas, not a source layer, and
+    //  we're dealing with it differently. This is a temporary kludge.
+    //  All checkboxes should be dealt with in the same way.
+    var boundaryCanvas = g.canvas.boundary;
+    boundaryCanvas.checkbox = document.getElementById('showBoundary');
+    boundaryCanvas.checkbox.onclick = function () {
+      boundaryCanvas.style.visibility = boundaryCanvas.checkbox.checked ?
+          'visible' : 'hidden';
+    };
+    boundaryCanvas.checkbox.checked = true;
+    boundaryCanvas.checkbox.onclick();
 
     g.reset();
     g.autoPaint();
