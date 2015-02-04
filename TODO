@@ -20,7 +20,16 @@
 
 + make controls unselectable
 
-- calculate bordering polygons (outside and inside)
+- calculate bordering polygons
+  + outside
+  - inside
+
+- adaptive border width
+
+- pixel inspector
+  - rgba
+  - hex
+  - coordinates
 
 - polygons
   + clarify the concept
@@ -45,12 +54,16 @@
   - your polygons
 
 - replace recursive pixel flooding with iterative versions
+
 - alternative way to render shadowContext: make imageData and write directly
 
-- pixel inspector
-  - rgba
-  - hex
-  - coordinates
+- clean up the layer relationships
+  - source canvas to target canvas
+  - autopaint to paint
+  - checkbox to paint
+  - checkbox to paint
+
+- let the user configure the reset state
 
 - manually draw polygon
   - add point
@@ -69,6 +82,17 @@
 
 - impose limits on zoom-in and zoom-out
 
+- polygon display options
+  - border width
+    - adaptive
+    - constant
+  - vertex size
+
+- color pickers
+  - background
+  - bounding box
+  - bounding border
+
 widgets:
 + reset button
 - display zoom level
@@ -86,9 +110,4 @@ widgets:
 - display a message while the image is loading
 
 - cross-platform scaling?
-
-- color pickers
-  - background
-  - bounding box
-  - bounding border
 

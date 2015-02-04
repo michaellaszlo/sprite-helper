@@ -434,8 +434,8 @@ SpriteHelper.load = function () {
       panel = g.panel = document.getElementById('controlPanel'),
       wrapper = document.getElementById('wrapper');
 
-  // Make target canvases.
-  var names = ['main', 'boundary', 'control'];
+  // Make target canvases. Control is the mouse-sensitive, topmost canvas.
+  var names = ['main', 'boundary', 'vertices', 'control'];
   g.canvas = {};
   g.canvases = [];
   for (var i = 0; i < names.length; ++i) {
