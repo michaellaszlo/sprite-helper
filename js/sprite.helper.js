@@ -30,7 +30,7 @@ var SpriteHelper = {
   boundary: {
     gap: 0.5
   },
-  debug: false
+  debug: true
 };
 
 SpriteHelper.message = function () {
@@ -429,6 +429,11 @@ SpriteHelper.mouseDownCanvas = function (event) {
   $(window).mouseup(mouseUp);
 };
 
+SpriteHelper.inspectPixel = function (event) {
+  var g = SpriteHelper;
+  g.message(JSON.stringify(event));
+};
+
 SpriteHelper.load = function () {
   var g = SpriteHelper,
       panel = g.panel = document.getElementById('controlPanel'),
@@ -535,7 +540,8 @@ SpriteHelper.load = function () {
     $(window).keydown(function (event) {
       var keyDownHandlers = {
         68: g.zoomOut,
-        70: g.zoomIn
+        70: g.zoomIn,
+        82: g.inspectPixel
       };
       var handler = keyDownHandlers[event.which];
       if (handler === undefined) {
