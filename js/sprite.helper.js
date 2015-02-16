@@ -429,9 +429,11 @@ SpriteHelper.mouseDownCanvas = function (event) {
   $(window).mouseup(mouseUp);
 };
 
-SpriteHelper.inspectPixel = function (event) {
-  var g = SpriteHelper;
-  g.message(JSON.stringify(event));
+SpriteHelper.inspectPixel = function () {
+  var g = SpriteHelper,
+      x = g.mouseEvent.pageX,
+      y = g.mouseEvent.pageY;
+  console.log(x+', '+y);
 };
 
 SpriteHelper.load = function () {
@@ -537,12 +539,12 @@ SpriteHelper.load = function () {
     resize();
     $(window).on('resize', resize);
     $(g.canvas.control).mousedown(g.mouseDownCanvas);
+    var keyDownHandlers = {
+      68: g.zoomOut,
+      70: g.zoomIn,
+      82: g.inspectPixel
+    };
     $(window).keydown(function (event) {
-      var keyDownHandlers = {
-        68: g.zoomOut,
-        70: g.zoomIn,
-        82: g.inspectPixel
-      };
       var handler = keyDownHandlers[event.which];
       if (handler === undefined) {
         g.message('key down: '+event.which);
@@ -552,6 +554,11 @@ SpriteHelper.load = function () {
     });
     $('#reset1x').mousedown(g.reset1x);
   };
+
+  function mouseTracker(event) {
+    g.mouseEvent = event;
+  }
+  $(window).mousemove(mouseTracker);
 
 };
 
