@@ -429,11 +429,28 @@ SpriteHelper.mouseDownCanvas = function (event) {
   $(window).mouseup(mouseUp);
 };
 
+SpriteHelper.startInspectingPixels = function () {
+  var g = SpriteHelper;
+  if (g.inspectingPixels) {
+    return;
+  }
+  g.inspectingPixels = true;
+  g.inspectPixel();
+  $(window).mousemove(g.inspectPixel);
+};
 SpriteHelper.inspectPixel = function () {
   var g = SpriteHelper,
-      x = g.mouseEvent.pageX,
-      y = g.mouseEvent.pageY;
+      offset = $(g.canvas.main).offset(),
+      x = g.mouseEvent.pageX - offset.left,
+      y = g.mouseEvent.pageY - offset.top;
   console.log(x+', '+y);
+};
+SpriteHelper.stopInspectingPixels = function () {
+  var g = SpriteHelper;
+  if (g.inspectingPixels) {
+    g.inspectingPixels = false;
+    $(window).off('mousemove', g.inspectPixel);
+  }
 };
 
 SpriteHelper.load = function () {
@@ -542,12 +559,23 @@ SpriteHelper.load = function () {
     var keyDownHandlers = {
       68: g.zoomOut,
       70: g.zoomIn,
-      82: g.inspectPixel
+      82: g.startInspectingPixels
     };
     $(window).keydown(function (event) {
       var handler = keyDownHandlers[event.which];
       if (handler === undefined) {
         g.message('key down: '+event.which);
+      } else {
+        handler();
+      }
+    });
+    var keyUpHandlers = {
+      82: g.stopInspectingPixels
+    };
+    $(window).keyup(function (event) {
+      var handler = keyUpHandlers[event.which];
+      if (handler === undefined) {
+        g.message('key up: '+event.which);
       } else {
         handler();
       }
