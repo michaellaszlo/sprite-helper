@@ -63,7 +63,7 @@ SpriteHelper.paint = function() {
       image = g.image,
       zoom = g.zoom,
       focus = g.focus,
-      crop = {},
+      crop = g.crop = {},
       target = g.target = {};
 
   // Compute the crop, which is the rectangle to be cut out of the image.
@@ -440,10 +440,15 @@ SpriteHelper.startInspectingPixels = function () {
 };
 SpriteHelper.inspectPixel = function () {
   var g = SpriteHelper,
+      zoom = g.zoom,
+      crop = g.crop,
+      target = g.target,
       offset = $(g.canvas.main).offset(),
-      x = g.mouseEvent.pageX - offset.left,
-      y = g.mouseEvent.pageY - offset.top;
-  console.log(x+', '+y);
+      rawX = g.mouseEvent.pageX - offset.left,
+      rawY = g.mouseEvent.pageY - offset.top,
+      x = Math.ceil((rawX - target.x) / zoom + crop.x),
+      y = Math.ceil((rawY - target.y) / zoom + crop.y);
+  console.log(rawX+', '+rawY+' -> '+x+' '+y);
 };
 SpriteHelper.stopInspectingPixels = function () {
   var g = SpriteHelper;
