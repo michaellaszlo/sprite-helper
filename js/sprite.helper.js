@@ -210,7 +210,7 @@ SpriteHelper.autoPaint = function () {
       autoboxContext = source.autobox.canvas.context,
       imageContext = source.image.canvas.context,
       shadowContext = source.shadow.canvas.context,
-      grid = new Array(width);
+      grid = g.grid = new Array(width);
   for (var x = 0; x < width; ++x) {
     grid[x] = new Array(height);
   }
@@ -222,7 +222,7 @@ SpriteHelper.autoPaint = function () {
       var cell = grid[x][y] = {
         r: data[i], g: data[i+1], b: data[i+2], a: data[i+3]
       };
-      cell.visible = (cell.r+cell.g+cell.b != 0);
+      cell.visible = (cell.a != 0);
       i += 4;
     }
   }
@@ -444,11 +444,18 @@ SpriteHelper.inspectPixel = function () {
       crop = g.crop,
       target = g.target,
       offset = $(g.canvas.main).offset(),
+      width = g.image.width,
+      height = g.image.height,
       rawX = g.mouseEvent.pageX - offset.left,
       rawY = g.mouseEvent.pageY - offset.top,
-      x = Math.ceil((rawX - target.x) / zoom + crop.x),
-      y = Math.ceil((rawY - target.y) / zoom + crop.y);
+      x = Math.floor((rawX - target.x) / zoom + crop.x),
+      y = Math.floor((rawY - target.y) / zoom + crop.y);
   console.log(rawX+', '+rawY+' -> '+x+' '+y);
+  if (x < 0 || x >= width || y < 0 || y >= height) {
+    return
+  }
+  var cell = g.grid[x][y];
+  console.log(JSON.stringify(cell));
 };
 SpriteHelper.stopInspectingPixels = function () {
   var g = SpriteHelper;
@@ -564,7 +571,7 @@ SpriteHelper.load = function () {
     var keyDownHandlers = {
       68: g.zoomOut,
       70: g.zoomIn,
-      82: g.startInspectingPixels
+      65: g.startInspectingPixels
     };
     $(window).keydown(function (event) {
       var handler = keyDownHandlers[event.which];
@@ -575,7 +582,7 @@ SpriteHelper.load = function () {
       }
     });
     var keyUpHandlers = {
-      82: g.stopInspectingPixels
+      65: g.stopInspectingPixels
     };
     $(window).keyup(function (event) {
       var handler = keyUpHandlers[event.which];

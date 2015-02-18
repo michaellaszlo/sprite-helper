@@ -55,6 +55,9 @@
 
 - replace recursive pixel flooding with iterative versions
 
+- for increased performance, draw the boundary only once per zoom level
+  - what other calculations and rendering can we cache?
+
 - alternative way to render shadowContext: make imageData and write directly
 
 - clean up the layer relationships
@@ -63,7 +66,7 @@
   - checkbox to paint
   - checkbox to paint
 
-- let the user configure the reset state
+- let the user configure the effect of the reset button
 
 - manually draw polygon
   - add point
@@ -76,8 +79,9 @@
 - generate code
 - code options
 
-- zoom toward mouse
-- zooming mode: toward mouse or toward center
+- zoom to mouse
+- zoom relative to mouse (i.e., keep the current pixel under the mouse)
+- zooming mode: to center, to mouse, relative to mouse
 - option: animate bounding box upon zooming
 
 - impose limits on zoom-in and zoom-out
