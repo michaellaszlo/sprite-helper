@@ -20,6 +20,8 @@
 
 + make controls unselectable
 
++ calculate boundary point projections during autopaint
+
 - calculate bordering polygons
   + outside
   - inside
@@ -53,10 +55,9 @@
   + boundary
   - your polygons
 
-- replace recursive pixel flooding with iterative versions
+- to avoid stack overflow, replace recursive pixel floods with iteration
 
-- for increased performance, draw the boundary only once per zoom level
-  - what other calculations and rendering can we cache?
+- investigate the sources of jitter
 
 - alternative way to render shadowContext: make imageData and write directly
 

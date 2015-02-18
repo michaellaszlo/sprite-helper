@@ -30,7 +30,7 @@ var SpriteHelper = {
   boundary: {
     gap: 0.5
   },
-  debug: true
+  debug: false
 };
 
 SpriteHelper.message = function () {
@@ -138,26 +138,13 @@ SpriteHelper.paint = function() {
   //  automatically as a function of the zoom.
   boundaryContext.lineWidth = 1;
   var polygons = g.polygons;
-  for (var i = 0; i < polygons.length; i++) {
+  for (var i = 0; i < polygons.length; ++i) {
     // Calculate boundary segments.
-    var polygon = polygons[i],
-        previous = polygon[polygon.length-1];
-    for (var j = 0; j < polygon.length; j++) {
-      // TODO: calculate the boundary angles and distances during autopaint.
-      var current = polygon[j],
-        a = previous.angle,
-        b = current.angle,
-        turn = b-a,
-        alpha = (Math.PI - turn)/2,
-        angle = a - alpha,
-        distance = g.boundary.gap / Math.sin(alpha),
-        dx = distance * Math.cos(angle),
-        dy = distance * Math.sin(angle),
-        x = (current.x - crop.x) * zoom,
-        y = (current.y - crop.y) * zoom;
-      current.outX = x + dx;
-      current.outY = y + dy;
-      previous = current;
+    var polygon = polygons[i];
+    for (var j = 0; j < polygon.length; ++j) {
+      var vertex = polygon[j];
+      vertex.outX = target.x + (vertex.x - crop.x) * zoom + vertex.dx;
+      vertex.outY = target.y + (vertex.y - crop.y) * zoom + vertex.dy;
     }
     // Option 1: Draw all boundary segments.
     // Option 2: Only draw boundary segments that have at least
@@ -166,11 +153,9 @@ SpriteHelper.paint = function() {
     // TODO: Implement Option 2.
     boundaryContext.beginPath();
     previous = polygon[polygon.length-1];
-    boundaryContext.moveTo(target.x + previous.outX,
-        target.y + previous.outY);
-    for (var j = 0; j < polygon.length; j++) {
-      boundaryContext.lineTo(target.x + polygon[j].outX,
-          target.y + polygon[j].outY);
+    boundaryContext.moveTo(previous.outX, previous.outY);
+    for (var j = 0; j < polygon.length; ++j) {
+      boundaryContext.lineTo(polygon[j].outX, polygon[j].outY);
     }
     boundaryContext.closePath();
     boundaryContext.stroke();
@@ -316,6 +301,24 @@ SpriteHelper.autoPaint = function () {
     polygons.push(polygon);
   }
 
+  // Calculate automatic boundary points.
+  for (var i = 0; i < polygons.length; i++) {
+    var polygon = polygons[i],
+        previous = polygon[polygon.length-1];
+    for (var j = 0; j < polygon.length; j++) {
+      var current = polygon[j],
+        a = previous.angle,
+        b = current.angle,
+        turn = b-a,
+        alpha = (Math.PI - turn)/2,
+        angle = a - alpha,
+        distance = g.boundary.gap / Math.sin(alpha);
+      current.dx = distance * Math.cos(angle);
+      current.dy = distance * Math.sin(angle);
+      previous = current;
+    }
+  }
+
   autoboxContext.fillStyle = '#999';
   shadowContext.fillStyle = '#000';
   for (var i = 0; i < blobs.length; ++i) {
@@ -450,12 +453,10 @@ SpriteHelper.inspectPixel = function () {
       rawY = g.mouseEvent.pageY - offset.top,
       x = Math.floor((rawX - target.x) / zoom + crop.x),
       y = Math.floor((rawY - target.y) / zoom + crop.y);
-  console.log(rawX+', '+rawY+' -> '+x+' '+y);
   if (x < 0 || x >= width || y < 0 || y >= height) {
     return
   }
   var cell = g.grid[x][y];
-  console.log(JSON.stringify(cell));
 };
 SpriteHelper.stopInspectingPixels = function () {
   var g = SpriteHelper;
