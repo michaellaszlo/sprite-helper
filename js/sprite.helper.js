@@ -100,6 +100,7 @@ SpriteHelper.paint = function() {
   //g.message('target: '+JSON.stringify(target));
 
   // Wipe the slate clean.
+  // TODO: Use double buffering.
   context.clearRect(0, 0, canvas.width, canvas.height);
   context.fillStyle = '#777';  // border color
   var border = g.layout.image.border;
@@ -109,6 +110,7 @@ SpriteHelper.paint = function() {
   context.fillRect(target.x, target.y, target.width, target.height);
 
   // Disable fuzzy interpolation.
+  // TODO: Do this once only.
   context.mozImageSmoothingEnabled = false;
   context.webkitImageSmoothingEnabled = false;
   context.msImageSmoothingEnabled = false;
@@ -134,8 +136,6 @@ SpriteHelper.paint = function() {
   boundaryCanvas.height = height;
   boundaryContext.clearRect(0, 0, width, height);
   boundaryContext.strokeStyle = '#774d2b';
-  // TODO: Add a mode in which we vary the line width (and the gap)
-  //  automatically as a function of the zoom.
   boundaryContext.lineWidth = 1;
   var polygons = g.polygons;
   for (var i = 0; i < polygons.length; ++i) {
@@ -146,11 +146,7 @@ SpriteHelper.paint = function() {
       vertex.outX = target.x + (vertex.x - crop.x) * zoom + vertex.dx;
       vertex.outY = target.y + (vertex.y - crop.y) * zoom + vertex.dy;
     }
-    // Option 1: Draw all boundary segments.
-    // Option 2: Only draw boundary segments that have at least
-    //  one endpoint within the viewing frame.
-    // At the moment we're going with Option 1.
-    // TODO: Implement Option 2.
+    // Draw boundary segments.
     boundaryContext.beginPath();
     previous = polygon[polygon.length-1];
     boundaryContext.moveTo(previous.outX, previous.outY);
@@ -437,6 +433,12 @@ SpriteHelper.startInspectingPixels = function () {
   if (g.inspectingPixels) {
     return;
   }
+  if (g.inspectorBox === undefined) {
+    g.inspectorBox = document.createElement('div');
+    g.inspectorBox.id = 'inspectorBox';
+    document.getElementById('wrapper').appendChild(g.inspectorBox);
+  }
+  g.inspectorBox.style.visibility = 'visible';
   g.inspectingPixels = true;
   g.inspectPixel();
   $(window).mousemove(g.inspectPixel);
@@ -449,20 +451,29 @@ SpriteHelper.inspectPixel = function () {
       offset = $(g.canvas.main).offset(),
       width = g.image.width,
       height = g.image.height,
-      rawX = g.mouseEvent.pageX - offset.left,
-      rawY = g.mouseEvent.pageY - offset.top,
+      pageX = g.mouseEvent.pageX,
+      pageY = g.mouseEvent.pageY,
+      rawX = pageX - offset.left,
+      rawY = pageY - offset.top,
       x = Math.floor((rawX - target.x) / zoom + crop.x),
       y = Math.floor((rawY - target.y) / zoom + crop.y);
   if (x < 0 || x >= width || y < 0 || y >= height) {
     return
   }
-  var cell = g.grid[x][y];
+  var cell = g.grid[x][y],
+      text = cell.r.toString(16) + cell.g.toString(16) + cell.b.toString(16) +
+             ' ' + Math.round(100 * cell.a / 256) + '%';
+  inspectorBox.innerHTML = text;
+  inspectorBox.style.left = (pageX - $(inspectorBox).outerWidth() / 2) + 'px';
+  inspectorBox.style.top = (pageY - $(inspectorBox).outerHeight() -
+      Math.min(10, 4 + g.zoom)) + 'px';
 };
 SpriteHelper.stopInspectingPixels = function () {
   var g = SpriteHelper;
   if (g.inspectingPixels) {
     g.inspectingPixels = false;
     $(window).off('mousemove', g.inspectPixel);
+    g.inspectorBox.style.visibility = 'hidden';
   }
 };
 

@@ -20,18 +20,27 @@
 
 + make controls unselectable
 
-+ calculate boundary point projections during autopaint
+- pixel inspector
+  + rgba
+  - make the box unselectable
+  - outline the pixel
+  - toggle mode?
+  - display coordinates?
 
-- calculate bordering polygons
+- add more layers
+  - colored background
+  - colored shadows
+  - alpha shadows
+
+- make bordering polygons
   + outside
   - inside
-
-- adaptive border width
-
-- pixel inspector
-  - rgba
-  - hex
-  - coordinates
+  - optimizations
+    + calculate projections during autopaint
+    - disable calculations when the layer is invisible
+    - skip polygons that are out of frame
+    - skip edges that are out of frame
+  - adaptive border: vary line width (and gap) as a function of the zoom
 
 - polygons
   + clarify the concept
