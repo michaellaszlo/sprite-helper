@@ -451,6 +451,7 @@ SpriteHelper.inspectPixel = function () {
       offset = $(g.canvas.main).offset(),
       width = g.image.width,
       height = g.image.height,
+      canvasWidth = g.canvas.main.width,
       pageX = g.mouseEvent.pageX,
       pageY = g.mouseEvent.pageY,
       rawX = pageX - offset.left,
@@ -462,9 +463,10 @@ SpriteHelper.inspectPixel = function () {
   }
   var cell = g.grid[x][y],
       text = cell.r.toString(16) + cell.g.toString(16) + cell.b.toString(16) +
-             ' ' + Math.round(100 * cell.a / 256) + '%';
+             '&nbsp;' + Math.round(100 * cell.a / 256) + '%';
   inspectorBox.innerHTML = text;
-  inspectorBox.style.left = (pageX - $(inspectorBox).outerWidth() / 2) + 'px';
+  inspectorBox.style.left = Math.min(pageX, canvasWidth -
+      $(inspectorBox).outerWidth())  + 'px';
   inspectorBox.style.top = (pageY - $(inspectorBox).outerHeight() -
       Math.min(10, 4 + g.zoom)) + 'px';
 };
