@@ -436,15 +436,23 @@ SpriteHelper.startInspectingPixels = function () {
   if (g.inspectorBox === undefined) {
     g.inspectorBox = document.createElement('div');
     g.inspectorBox.id = 'inspectorBox';
+    var spans = g.inspectorBox.spans = {
+        color: document.createElement('span'),
+        opacity: document.createElement('span')
+    };
+    $(spans.color).addClass('color');
+    $(spans.opacity).addClass('opacity');
+    g.inspectorBox.appendChild(spans.color);
+    g.inspectorBox.appendChild(spans.opacity);
     document.getElementById('wrapper').appendChild(g.inspectorBox);
   }
-  g.inspectorBox.style.visibility = 'visible';
   g.inspectingPixels = true;
   g.inspectPixel();
   $(window).mousemove(g.inspectPixel);
 };
 SpriteHelper.inspectPixel = function () {
   var g = SpriteHelper,
+      inspectorBox = g.inspectorBox,
       d2h = g.decimalToHexString,
       zoom = g.zoom,
       crop = g.crop,
@@ -460,12 +468,23 @@ SpriteHelper.inspectPixel = function () {
       x = Math.floor((rawX - target.x) / zoom + crop.x),
       y = Math.floor((rawY - target.y) / zoom + crop.y);
   if (x < 0 || x >= width || y < 0 || y >= height) {
+    inspectorBox.style.visibility = 'hidden';
     return
   }
+  inspectorBox.style.visibility = 'visible';
   var cell = g.grid[x][y],
-      text = d2h[cell.r] + d2h[cell.g] + d2h[cell.b] +
-             '&nbsp;' + Math.round(100 * cell.a / 256) + '%';
-  inspectorBox.innerHTML = text;
+      color = '#' + d2h[cell.r] + d2h[cell.g] + d2h[cell.b],
+      opacity = Math.round(100 * cell.a / 256);
+  if (cell.r + cell.g + cell.b >= 384) {
+    inspectorBox.style.color = '#000';
+  } else {
+    inspectorBox.style.color = '#fff';
+  }
+  inspectorBox.style.backgroundColor = color;
+  inspectorBox.spans.color.innerHTML = color;
+  inspectorBox.spans.opacity.innerHTML =
+          (opacity == 100 ? '' : (opacity >= 10 ? '&nbsp;': '&nbsp;&nbsp;')) +
+          opacity + '%';
   inspectorBox.style.left = Math.min(pageX, canvasWidth -
       $(inspectorBox).outerWidth())  + 'px';
   inspectorBox.style.top = (pageY - $(inspectorBox).outerHeight() -
