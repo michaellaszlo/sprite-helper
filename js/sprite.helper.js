@@ -445,6 +445,7 @@ SpriteHelper.startInspectingPixels = function () {
 };
 SpriteHelper.inspectPixel = function () {
   var g = SpriteHelper,
+      d2h = g.decimalToHexString,
       zoom = g.zoom,
       crop = g.crop,
       target = g.target,
@@ -462,7 +463,7 @@ SpriteHelper.inspectPixel = function () {
     return
   }
   var cell = g.grid[x][y],
-      text = cell.r.toString(16) + cell.g.toString(16) + cell.b.toString(16) +
+      text = d2h[cell.r] + d2h[cell.g] + d2h[cell.b] +
              '&nbsp;' + Math.round(100 * cell.a / 256) + '%';
   inspectorBox.innerHTML = text;
   inspectorBox.style.left = Math.min(pageX, canvasWidth -
@@ -614,6 +615,12 @@ SpriteHelper.load = function () {
   }
   $(window).mousemove(mouseTracker);
 
+  // Preload hex values to improve pixel-inspector performance.
+  g.decimalToHexString = {};
+  for (var decimal = 0; decimal < 256; ++decimal) {
+    g.decimalToHexString[decimal] = (decimal < 16 ? '0' : '') +
+        decimal.toString(16);
+  }
 };
 
 $(window).load(SpriteHelper.load);
