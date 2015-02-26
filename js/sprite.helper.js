@@ -99,6 +99,12 @@ SpriteHelper.paint = function() {
   //g.message('crop: '+JSON.stringify(crop));
   //g.message('target: '+JSON.stringify(target));
 
+  // Disable fuzzy interpolation.
+  context.mozImageSmoothingEnabled = false;
+  context.webkitImageSmoothingEnabled = false;
+  context.msImageSmoothingEnabled = false;
+  context.imageSmoothingEnabled = false;
+
   // Wipe the slate clean.
   // TODO: Use double buffering.
   context.clearRect(0, 0, canvas.width, canvas.height);
@@ -108,13 +114,6 @@ SpriteHelper.paint = function() {
       target.width + 2*border*zoom, target.height + 2*border*zoom);
   context.fillStyle = '#fff';  // background color
   context.fillRect(target.x, target.y, target.width, target.height);
-
-  // Disable fuzzy interpolation.
-  // TODO: Do this once only.
-  context.mozImageSmoothingEnabled = false;
-  context.webkitImageSmoothingEnabled = false;
-  context.msImageSmoothingEnabled = false;
-  context.imageSmoothingEnabled = false;
 
   // Scale the crop rectangle back to the native image and copy it to
   //   the target rectangle on the canvas.
@@ -437,13 +436,13 @@ SpriteHelper.startInspectingPixels = function () {
     g.inspectorBox = document.createElement('div');
     g.inspectorBox.id = 'inspectorBox';
     var spans = g.inspectorBox.spans = {
-        color: document.createElement('span'),
-        opacity: document.createElement('span')
+        opacity: document.createElement('span'),
+        color: document.createElement('span')
     };
-    $(spans.color).addClass('color');
     $(spans.opacity).addClass('opacity');
-    g.inspectorBox.appendChild(spans.color);
+    $(spans.color).addClass('color');
     g.inspectorBox.appendChild(spans.opacity);
+    g.inspectorBox.appendChild(spans.color);
     document.getElementById('wrapper').appendChild(g.inspectorBox);
   }
   g.inspectingPixels = true;
@@ -467,6 +466,10 @@ SpriteHelper.inspectPixel = function () {
       rawY = pageY - offset.top,
       x = Math.floor((rawX - target.x) / zoom + crop.x),
       y = Math.floor((rawY - target.y) / zoom + crop.y);
+  if (g.removeFrame) {
+    g.removeFrame();
+    g.removeFrame = undefined;
+  }
   if (x < 0 || x >= width || y < 0 || y >= height) {
     inspectorBox.style.visibility = 'hidden';
     return
@@ -476,10 +479,11 @@ SpriteHelper.inspectPixel = function () {
       color = '#' + d2h[cell.r] + d2h[cell.g] + d2h[cell.b],
       opacity = Math.round(100 * cell.a / 256);
   if (cell.r + cell.g + cell.b >= 384) {
-    inspectorBox.style.color = '#000';
+    var contrastColor = '#000';
   } else {
-    inspectorBox.style.color = '#fff';
+    var contrastColor = '#fff';
   }
+  inspectorBox.style.color = contrastColor;
   inspectorBox.style.backgroundColor = color;
   inspectorBox.spans.color.innerHTML = color;
   inspectorBox.spans.opacity.innerHTML =
@@ -489,9 +493,29 @@ SpriteHelper.inspectPixel = function () {
       $(inspectorBox).outerWidth())  + 'px';
   inspectorBox.style.top = (pageY - $(inspectorBox).outerHeight() -
       Math.min(10, 4 + g.zoom)) + 'px';
+  var context = g.canvas.control.context,
+      frameX = target.x + zoom*(x - crop.x),
+      frameY = target.y + zoom*(y - crop.y);
+  // Disable fuzzy interpolation.
+  context.mozImageSmoothingEnabled = false;
+  context.webkitImageSmoothingEnabled = false;
+  context.msImageSmoothingEnabled = false;
+  context.imageSmoothingEnabled = false;
+  context.fillStyle = '#ddd';
+  context.fillRect(frameX-2, frameY-2, zoom+4, zoom+4);
+  context.fillStyle = '#222';
+  context.fillRect(frameX-1, frameY-1, zoom+2, zoom+2);
+  context.clearRect(frameX, frameY, zoom, zoom);
+  g.removeFrame = function () {
+    context.clearRect(frameX-4, frameY-4, zoom+8, zoom+8);
+  };
 };
 SpriteHelper.stopInspectingPixels = function () {
   var g = SpriteHelper;
+  if (g.removeFrame) {
+    g.removeFrame();
+    g.removeFrame = undefined;
+  }
   if (g.inspectingPixels) {
     g.inspectingPixels = false;
     $(window).off('mousemove', g.inspectPixel);
@@ -511,7 +535,7 @@ SpriteHelper.load = function () {
   for (var i = 0; i < names.length; ++i) {
     var name = names[i];
     var canvas = document.createElement('canvas');
-    canvas.context = canvas.getContext('2d');
+    var context = canvas.context = canvas.getContext('2d');
     $(canvas).addClass('target');
     canvas.id = name+'Canvas';
     g.canvas[name] = canvas;

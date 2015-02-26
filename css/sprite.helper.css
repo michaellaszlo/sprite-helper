@@ -62,7 +62,7 @@ input.inactive {
 #inspectorBox {
   display: inline;
   position: fixed;
-  border: 1px solid #888;
+  border: 1px solid #333;
   font-family: monospace;
   font-size: 19px;
   border-radius: 6px;
@@ -74,5 +74,8 @@ input.inactive {
 #inspectorBox span.opacity {
   color: #000;
   background: #fff;
+}
+#inspectorBox span.color {
+  padding-left: 10px;
 }
 

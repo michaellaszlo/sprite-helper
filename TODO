@@ -22,10 +22,9 @@
 
 - pixel inspector
   + rgba
-  - make the box unselectable
   - outline the pixel
+  - make the box unselectable
   - toggle mode?
-  - display coordinates?
 
 - add more layers
   - colored background
