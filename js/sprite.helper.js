@@ -459,18 +459,21 @@ SpriteHelper.inspectPixel = function () {
       offset = $(g.canvas.main).offset(),
       width = g.image.width,
       height = g.image.height,
-      canvasWidth = g.canvas.main.width,
       pageX = g.mouseEvent.pageX,
       pageY = g.mouseEvent.pageY,
       rawX = pageX - offset.left,
       rawY = pageY - offset.top,
       x = Math.floor((rawX - target.x) / zoom + crop.x),
-      y = Math.floor((rawY - target.y) / zoom + crop.y);
+      y = Math.floor((rawY - target.y) / zoom + crop.y),
+      canvasWidth = g.canvas.main.width,
+      canvasHeight = g.canvas.main.height;
   if (g.removeFrame) {
     g.removeFrame();
     g.removeFrame = undefined;
   }
-  if (x < 0 || x >= width || y < 0 || y >= height) {
+  console.log(rawY+' '+canvasHeight);
+  if (rawX <= 0 || rawX > canvasWidth || rawY <= 0 || rawY > canvasHeight ||
+      x < 0 || x >= width || y < 0 || y >= height) {
     inspectorBox.style.visibility = 'hidden';
     return
   }
@@ -484,34 +487,31 @@ SpriteHelper.inspectPixel = function () {
     var contrastColor = '#fff';
   }
   var context = g.canvas.control.context,
-      frameX = target.x + zoom*(x - crop.x),
-      frameY = target.y + zoom*(y - crop.y);
+      boxX = target.x + zoom*(x - crop.x),
+      boxY = target.y + zoom*(y - crop.y);
   inspectorBox.style.color = contrastColor;
   inspectorBox.style.backgroundColor = color;
   inspectorBox.spans.color.innerHTML = color;
   inspectorBox.spans.opacity.innerHTML =
           (opacity == 100 ? '' : (opacity >= 10 ? '&nbsp;': '&nbsp;&nbsp;')) +
           opacity + '%';
-  inspectorBox.style.left = //Math.min(pageX, canvasWidth -
-      //$(inspectorBox).outerWidth())
-      (frameX)
-      + 'px';
-  inspectorBox.style.top = //(pageY - $(inspectorBox).outerHeight() -
-      //Math.min(10, 4 + g.zoom))
-      (frameY - 1)
-      + 'px';
+  var boxWidth = $(inspectorBox).outerWidth(),
+      boxHeight = $(inspectorBox).outerHeight();
+  inspectorBox.style.left = Math.min(Math.max(0, boxX + offset.left - 31),
+      canvasWidth - boxWidth) + 'px';
+  inspectorBox.style.top = (boxY + offset.top - boxHeight - 12) + 'px';
   // Disable fuzzy interpolation.
   context.mozImageSmoothingEnabled = false;
   context.webkitImageSmoothingEnabled = false;
   context.msImageSmoothingEnabled = false;
   context.imageSmoothingEnabled = false;
   context.fillStyle = '#ddd';
-  context.fillRect(frameX-2, frameY-2, zoom+4, zoom+4);
-  context.fillStyle = '#222';
-  context.fillRect(frameX-1, frameY-1, zoom+2, zoom+2);
-  context.clearRect(frameX, frameY, zoom, zoom);
+  context.fillRect(boxX-3, boxY-3, zoom+6, zoom+6);
+  context.fillStyle = '#333';
+  context.fillRect(boxX-2, boxY-2, zoom+4, zoom+4);
+  context.clearRect(boxX, boxY, zoom, zoom);
   g.removeFrame = function () {
-    context.clearRect(frameX-4, frameY-4, zoom+8, zoom+8);
+    context.clearRect(boxX-4, boxY-4, zoom+8, zoom+8);
   };
 };
 SpriteHelper.stopInspectingPixels = function () {
