@@ -39,6 +39,7 @@
     - disable calculations when the layer is invisible
     - skip polygons that are out of frame
     - skip edges that are out of frame
+    - draw borders onto tiles; move tiles instead of redrawing
   - adaptive border: vary line width (and gap) as a function of the zoom
 
 - polygons

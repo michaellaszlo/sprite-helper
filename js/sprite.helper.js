@@ -483,19 +483,23 @@ SpriteHelper.inspectPixel = function () {
   } else {
     var contrastColor = '#fff';
   }
+  var context = g.canvas.control.context,
+      frameX = target.x + zoom*(x - crop.x),
+      frameY = target.y + zoom*(y - crop.y);
   inspectorBox.style.color = contrastColor;
   inspectorBox.style.backgroundColor = color;
   inspectorBox.spans.color.innerHTML = color;
   inspectorBox.spans.opacity.innerHTML =
           (opacity == 100 ? '' : (opacity >= 10 ? '&nbsp;': '&nbsp;&nbsp;')) +
           opacity + '%';
-  inspectorBox.style.left = Math.min(pageX, canvasWidth -
-      $(inspectorBox).outerWidth())  + 'px';
-  inspectorBox.style.top = (pageY - $(inspectorBox).outerHeight() -
-      Math.min(10, 4 + g.zoom)) + 'px';
-  var context = g.canvas.control.context,
-      frameX = target.x + zoom*(x - crop.x),
-      frameY = target.y + zoom*(y - crop.y);
+  inspectorBox.style.left = //Math.min(pageX, canvasWidth -
+      //$(inspectorBox).outerWidth())
+      (frameX)
+      + 'px';
+  inspectorBox.style.top = //(pageY - $(inspectorBox).outerHeight() -
+      //Math.min(10, 4 + g.zoom))
+      (frameY - 1)
+      + 'px';
   // Disable fuzzy interpolation.
   context.mozImageSmoothingEnabled = false;
   context.webkitImageSmoothingEnabled = false;
