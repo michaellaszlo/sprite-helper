@@ -126,34 +126,55 @@ SpriteHelper.paint = function() {
     }
   }
 
-  // Prepare to render the boundary.
-  var boundaryCanvas = g.canvas.boundary,
-      boundaryContext = boundaryCanvas.context,
-      width = canvas.width, height = canvas.height;
-  // Resize the boundary source to fit the main canvas.
-  boundaryCanvas.width = width;
-  boundaryCanvas.height = height;
-  boundaryContext.clearRect(0, 0, width, height);
-  boundaryContext.strokeStyle = '#774d2b';
-  boundaryContext.lineWidth = 1;
-  var polygons = g.polygons;
-  for (var i = 0; i < polygons.length; ++i) {
-    // Calculate boundary segments.
-    var polygon = polygons[i];
-    for (var j = 0; j < polygon.length; ++j) {
-      var vertex = polygon[j];
-      vertex.outX = target.x + (vertex.x - crop.x) * zoom + vertex.dx;
-      vertex.outY = target.y + (vertex.y - crop.y) * zoom + vertex.dy;
+  // Draw the boundary segments based on precalculated vertices.
+  var boundaryCanvas = g.canvas.boundary;
+  if (boundaryCanvas.checkbox.checked) {
+    var boundaryContext = boundaryCanvas.context,
+        width = canvas.width, height = canvas.height;
+    // Resize the boundary source to fit the main canvas.
+    boundaryCanvas.width = width;
+    boundaryCanvas.height = height;
+    boundaryContext.clearRect(0, 0, width, height);
+    boundaryContext.strokeStyle = '#774d2b';
+    boundaryContext.lineWidth = 1;
+    var polygons = g.polygons;
+    for (var i = 0; i < polygons.length; ++i) {
+      // Calculate boundary segments.
+      var polygon = polygons[i];
+      for (var j = 0; j < polygon.length; ++j) {
+        var vertex = polygon[j];
+        vertex.outX = target.x + (vertex.x - crop.x) * zoom + vertex.dx;
+        vertex.outY = target.y + (vertex.y - crop.y) * zoom + vertex.dy;
+      }
+      // Draw boundary segments.
+      boundaryContext.beginPath();
+      previous = polygon[polygon.length-1];
+      boundaryContext.moveTo(previous.outX, previous.outY);
+      for (var j = 0; j < polygon.length; ++j) {
+        boundaryContext.lineTo(polygon[j].outX, polygon[j].outY);
+      }
+      boundaryContext.closePath();
+      boundaryContext.stroke();
     }
-    // Draw boundary segments.
-    boundaryContext.beginPath();
-    previous = polygon[polygon.length-1];
-    boundaryContext.moveTo(previous.outX, previous.outY);
-    for (var j = 0; j < polygon.length; ++j) {
-      boundaryContext.lineTo(polygon[j].outX, polygon[j].outY);
+  }
+
+  // Draw the vertices.
+  var vertexCanvas = g.canvas.boundary;
+  if (vertexCanvas.checkbox.checked) {
+    vertexCanvas.style.visibility = 'visible';
+    console.log('vertices:');
+    var context = vertexCanvas.context,
+        polygons = g.polygons;
+    context.fillStyle = '#ccc';
+    for (var i = 0; i < polygons.length; ++i) {
+      var polygon = polygons[i];
+      for (var j = 0; j < polygon.length; ++j) {
+        var vertex = polygon[j],
+          x = target.x + (x - crop.x) * zoom,
+          y = target.y + (y - crop.y) * zoom;
+          context.fillRect(x-1, y-1, 2, 2);
+      }
     }
-    boundaryContext.closePath();
-    boundaryContext.stroke();
   }
 };
 
@@ -180,7 +201,7 @@ SpriteHelper.reset1x = function () {
   g.paint();
 };
 
-SpriteHelper.autoPaint = function () {
+SpriteHelper.processImage = function () {
   var g = SpriteHelper,
       image = g.image,
       width = image.width,
@@ -471,7 +492,6 @@ SpriteHelper.inspectPixel = function () {
     g.removeFrame();
     g.removeFrame = undefined;
   }
-  console.log(rawY+' '+canvasHeight);
   if (rawX <= 0 || rawX > canvasWidth || rawY <= 0 || rawY > canvasHeight ||
       x < 0 || x >= width || y < 0 || y >= height) {
     inspectorBox.style.visibility = 'hidden';
@@ -613,20 +633,8 @@ SpriteHelper.load = function () {
     //  perceptible rendering delay with the current approach.
     g.source.image.checkbox.checked = true;
 
-    // The boundary is on a target canvas, not a source layer, and
-    //  we're dealing with it differently. This is a temporary kludge.
-    //  TODO: Deal with all checkboxes in the same way.
-    var boundaryCanvas = g.canvas.boundary;
-    boundaryCanvas.checkbox = document.getElementById('showBoundary');
-    boundaryCanvas.checkbox.onclick = function () {
-      boundaryCanvas.style.visibility = boundaryCanvas.checkbox.checked ?
-          'visible' : 'hidden';
-    };
-    boundaryCanvas.checkbox.checked = true;
-    boundaryCanvas.checkbox.onclick();
-
     g.reset();
-    g.autoPaint();
+    g.processImage();
     resize();
     $(window).on('resize', resize);
     $(g.canvas.control).mousedown(g.mouseDownCanvas);
@@ -668,6 +676,20 @@ SpriteHelper.load = function () {
     g.decimalToHexString[decimal] = (decimal < 16 ? '0' : '') +
         decimal.toString(16);
   }
+
+    // The boundary is on a target canvas, not a source layer, and
+    //  we're dealing with it differently. This is a temporary kludge.
+    //  TODO: Deal with all checkboxes in the same way.
+    var boundaryCanvas = g.canvas.boundary;
+    boundaryCanvas.checkbox = document.getElementById('showBoundary');
+    boundaryCanvas.checkbox.onclick = function () {
+      boundaryCanvas.style.visibility = boundaryCanvas.checkbox.checked ?
+          'visible' : 'hidden';
+      if (boundaryCanvas.checkbox.checked) {
+        g.paint();
+      }
+    };
+    boundaryCanvas.checkbox.checked = true;
 };
 
 $(window).load(SpriteHelper.load);

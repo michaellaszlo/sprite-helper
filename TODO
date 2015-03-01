@@ -34,9 +34,9 @@
 - make bordering polygons
   + outside
   - inside
-  - optimizations
+  - performance optimizations
     + calculate projections during autopaint
-    - disable calculations when the layer is invisible
+    + disable calculations when the layer is invisible
     - skip polygons that are out of frame
     - skip edges that are out of frame
     - draw borders onto tiles; move tiles instead of redrawing
