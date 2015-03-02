@@ -159,20 +159,24 @@ SpriteHelper.paint = function() {
   }
 
   // Draw the vertices.
-  var vertexCanvas = g.canvas.boundary;
+  var vertexCanvas = g.canvas.checkbox;
   if (vertexCanvas.checkbox.checked) {
-    vertexCanvas.style.visibility = 'visible';
-    console.log('vertices:');
+    //g.canvas.boundary.
     var context = vertexCanvas.context,
         polygons = g.polygons;
-    context.fillStyle = '#ccc';
+    context.fillStyle = '#444';
+    var radius = Math.min(8, zoom),
+        angle = 2*Math.PI;
     for (var i = 0; i < polygons.length; ++i) {
       var polygon = polygons[i];
       for (var j = 0; j < polygon.length; ++j) {
         var vertex = polygon[j],
-          x = target.x + (x - crop.x) * zoom,
-          y = target.y + (y - crop.y) * zoom;
-          context.fillRect(x-1, y-1, 2, 2);
+          x = target.x + (vertex.x - crop.x) * zoom,
+          y = target.y + (vertex.y - crop.y) * zoom;
+          context.beginPath();
+          context.arc(x, y, radius, 0, angle, false);
+          context.closePath();
+          context.fill();
       }
     }
   }
@@ -680,16 +684,26 @@ SpriteHelper.load = function () {
     // The boundary is on a target canvas, not a source layer, and
     //  we're dealing with it differently. This is a temporary kludge.
     //  TODO: Deal with all checkboxes in the same way.
-    var boundaryCanvas = g.canvas.boundary;
-    boundaryCanvas.checkbox = document.getElementById('showBoundary');
-    boundaryCanvas.checkbox.onclick = function () {
-      boundaryCanvas.style.visibility = boundaryCanvas.checkbox.checked ?
+    var canvas = g.canvas.boundary;
+    canvas.checkbox = document.getElementById('showBoundary');
+    canvas.checkbox.onclick = function () {
+      canvas.style.visibility = canvas.checkbox.checked ?
           'visible' : 'hidden';
-      if (boundaryCanvas.checkbox.checked) {
+      if (canvas.checkbox.checked) {
         g.paint();
       }
     };
-    boundaryCanvas.checkbox.checked = true;
+    canvas.checkbox.checked = true;
+    canvas = g.canvas.vertices;
+    canvas.checkbox = document.getElementById('showVertices');
+    canvas.checkbox.onclick = function () {
+      canvas.style.visibility = canvas.checkbox.checked ?
+          'visible' : 'hidden';
+      if (canvas.checkbox.checked) {
+        g.paint();
+      }
+    };
+    canvas.checkbox.checked = true;
 };
 
 $(window).load(SpriteHelper.load);
