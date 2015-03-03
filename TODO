@@ -22,8 +22,10 @@
 
 - pixel inspector
   + rgba
-  - outline the pixel
-  - make the box unselectable
+  + outline the pixel
+  - display alpha hex to the left of the percentage
+  - replace the dynamically rendered outline with a ready-made div
+  - make the pixel inspector unselectable?
   - toggle mode?
 
 - add more layers
@@ -47,6 +49,13 @@
   + define the relationship between polygons and boxes
   + generate zero-threshold polygons
   - add threshold options
+
+- refactor everything
+  - layers
+  - controls
+  - rendering
+
+- implement tiled rendering
 
 - layer selection
   + checkboxes
@@ -100,7 +109,7 @@
   - border width
     - adaptive
     - constant
-  - vertex size
+  - vertex overlap, size, color
 
 - color pickers
   - background
